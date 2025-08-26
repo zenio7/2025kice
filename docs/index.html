@@ -1,0 +1,2257 @@
+<h1>A type</h1>
+<h2>1. Azure Resource RBAC Policy: 관리그룹 및 구독에 계층형 구조에 따른 사용자권한 제어</h2>
+<ul>
+<li>RBAC관련 기본 내용 숙지</li>
+<li>Builtin policy에 대해서 파악하고 대략적으로 어떤기능을 하는지 1문제</li>
+<li>권한체계 해석 하는것 1문제</li>
+<li>정리<ul>
+<li>Azure RBAC : 어떤 사용자가 어떤 리소스에 대해 어떤 작업을 수행할 수 있는지에 대한 권한을 정의하고 제어함.</li>
+<li>Azure Policy : Azure 환경의 리소스가 조직의 표준이나 규정 준수 요구사항을 따르도록 강제하거나 감사함. (모든 가상머신에는 특정 태그가 무조건 포함되어야 한다거나, 특정지역에만 리소스를 배포하도록 강제하는 등)</li>
+<li>Azure 리소스의 계층구조 : 테넌트 &gt; 관리 그룹 &gt; 구독 &gt; 리소스 그룹 &gt; 리소스</li>
+<li>RBAC의 기본 개념:<ul>
+<li>보안 주체(Security Principal): 액세스 권한을 부여받는 개체. Azure AD 사용자, 그룹, 서비스 주체(애플리케이션), 관리 ID 등이 될 수 있음.</li>
+<li>역할 정의(Role Definition): 수행할 수 있는 작업(Actions) 및 수행할 수 없는 작업(NotActions) 집합을 정의함. Azure는 소유자(Owner), 기여자(Contributor), 읽기 권한자(Reader), 사용자 액세스 관리자(User Access Administrator)와 같은 다양한 기본 제공 역할(Built-in roles)을 제공하며, 조직의 특정 요구사항에 맞춰 사용자 지정 역할(Custom roles)을 생성할 수도 있음.</li>
+<li>범위(Scope): 역할 할당이 적용되는 리소스의 계층적 수준. 관리 그룹(Management Group), 구독(Subscription), 리소스 그룹(Resource Group), 개별 리소스 등 4가지 주요 수준에서 범위를 지정할 수 있음. 상위 수준에 할당된 역할은 하위 수준의 모든 리소스에 상속됨.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련링크<ul>
+<li>Azure RBAC(Azure 역할 기반 액세스 제어)란?: <a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/overview">https://learn.microsoft.com/ko-kr/azure/role-based-access-control/overview</a></li>
+<li>Azure RBAC의 범위 이해: <a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/scope-overview">https://learn.microsoft.com/ko-kr/azure/role-based-access-control/scope-overview</a></li>
+<li>Azure built-in role: <a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/built-in-roles">https://learn.microsoft.com/ko-kr/azure/role-based-access-control/built-in-roles</a></li>
+<li>Azure Policy built-in policy 목록: <a href="https://learn.microsoft.com/ko-kr/azure/governance/policy/samples/built-in-policies">https://learn.microsoft.com/ko-kr/azure/governance/policy/samples/built-in-policies</a></li>
+<li>Azure 사용자 지정 역할: <a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/custom-roles">https://learn.microsoft.com/ko-kr/azure/role-based-access-control/custom-roles</a></li>
+</ul>
+</li>
+</ul>
+<h2>2. Azure Storage Account(Object Storage) Tier 별 특성</h2>
+<ul>
+<li>Datalake의 storage에 어떤 스토리지가 적합할지 문제</li>
+<li>tier별로 기능의 차이(crud측면)도 있는데 종류별 제약사항 및 적합한것에 대해 숙지</li>
+<li>정리<ul>
+<li>Datalake의 스토리지는 프리미엄 블록 Blob Storage Account 사용이 필수.<ul>
+<li>(Portal에서)Storage Account 생성 방법 성능 : 프리미엄, 프리미엄 계정유형 : 블록 Blob, Data Lake Storage Gen2 : 계층구조 네임 스페이스(HNS) 사용 체크</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련링크<ul>
+<li>스토리지 계정 유형 List <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview#types-of-storage-accounts">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview#types-of-storage-accounts</a></li>
+<li>프리미엄 스토리지 계정 생성 <a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-blob-block-blob-premium#getting-started-with-premium">https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-blob-block-blob-premium#getting-started-with-premium</a></li>
+<li>표준 스토리지 계정(Standard Storage Account - GPv2, GPv1, Blob Storage)의 기본 제한량 : Support에 요청하여 한도증가 요청 가능 <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview#scalability-targets-for-standard-storage-accounts">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview#scalability-targets-for-standard-storage-accounts</a></li>
+</ul>
+</li>
+</ul>
+<h2>3. Azure Storage Account Life Cycle Event 활용법: Event 처리를 위한 구성방법, 데이터 유지관리 등 자동화 기능에 대한 이해</h2>
+<ul>
+<li>Lifecycle 이벤트에 대해서 어느시점에 데이터가 삭제되는지, 자동화 유지관리에 대한 문제</li>
+<li>이벤트 체인 : 이벤트 허브인지 이벤트 그리드인지 어떤거 써야되는지 알면된다</li>
+<li>실제로도 많이 사용되는 아키텍쳐이기에 좀 자세히 공부하면 좋을것같다는 의견</li>
+<li>정리<ul>
+<li>수명 주기 이벤트 발생 시점 및 데이터 삭제:<ul>
+<li>수명 주기 관리 정책은 정의된 규칙(예: 마지막 수정/액세스 시간으로부터 며칠 경과)에 따라 데이터를 특정 계층으로 이동시키거나 삭제함.</li>
+<li>정책이 적용된 후 변경 사항이 적용되고 첫 실행이 시작되는 데 최대 24시간이 소요. 활성 정책은 주기적으로 개체를 처리함.</li>
+<li>LifecyclePolicyCompleted 이벤트를 구독하여 정책 실행 완료를 모니터링하고, 특정 작업(이동, 삭제, 보관)이 언제 수행되었는지 확인가능.</li>
+</ul>
+</li>
+<li>자동화 유지 관리 및 구성 방법:<ul>
+<li>정책 규칙은 Blob 유형, 이름 접두사, Blob 인덱스 태그 등 필터를 사용하여 특정 Blob 집합에 적용가능.</li>
+<li>액세스 추적을 활성화해서 Blob의 마지막 액세스 시간을 기준으로 정책을 정의가능함.</li>
+</ul>
+</li>
+<li>Storage 계정 이벤트를 통해 자동화 하려면 Event Grid가 맞음.<ul>
+<li>Azure Event Grid : 이벤트 라우팅 서비스. 특정 이벤트를 구독하여 다르 서비스로 전달하는데 주로 사용됨.</li>
+<li>Azure Event Hub : 데이터 스트리밍 서비스(kafka). 주로 빅데이터 수집 및 처리에 쓰임.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련링크<ul>
+<li>Azure Blob Storage 수명 주기 관리 개요: <a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-overview">https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-overview</a></li>
+<li>수명 주기 관리 정책 구성: <a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-policy-configure">https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-policy-configure</a></li>
+<li>수명 주기 관리 정책 모니터링: <a href="https://docs.azure.cn/en-us/storage/blobs/lifecycle-management-policy-monitor">https://docs.azure.cn/en-us/storage/blobs/lifecycle-management-policy-monitor</a></li>
+<li>Azure Event Grid: <a href="https://learn.microsoft.com/ko-kr/azure/event-grid/overview">https://learn.microsoft.com/ko-kr/azure/event-grid/overview</a></li>
+<li>Azure Event Hub: <a href="https://learn.microsoft.com/ko-kr/azure/event-hubs/event-hubs-about">https://learn.microsoft.com/ko-kr/azure/event-hubs/event-hubs-about</a></li>
+</ul>
+</li>
+</ul>
+<h2>4. VNet 구성시 Inbound(LB), Outbound(NAT)구성방법과 기술구조/네트웍 흐름 이해</h2>
+<ul>
+<li>network flow에 대한 이해가 있어야함.</li>
+<li>WEB/WAS에서 LB나 NAT 구성하는 방법 및 관련된 azure service를 알아야함.</li>
+<li>NAT가 정확히 왜 필요한지 알아야 할것..</li>
+<li>정리<ul>
+<li>NAT Gateway: 서브넷과 연결되어 해당 서브넷의 모든 아웃바운드 트래픽에 대한 SNAT(Source Network Address Translation)를 제공. 고정된 공용 IP 주소를 통해 외부와 통신함.<ul>
+<li>사용 목적 :<ul>
+<li>보안: 내부 네트워크의 사설 IP 주소를 외부에 노출하지 않고, 하나의 공용 IP 주소로 통신하게 하여 내부 네트워크 비노출.</li>
+<li>IP 주소 절약: 여러 개의 사설 IP 주소를 가진 내부 리소스들이 제한된 수의 공용 IP 주소를 공유.</li>
+<li>규정 준수/정책 적용: 특정 공용 IP를 통해서만 외부와 통신하게 하여 아웃바운드 트래픽에 대한 보안 정책을 중앙에서 관리가능.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Load Balancer: 웹/WAS 서버 앞에 위치하여 외부에서 들어오는 요청을 여러 웹/WAS 인스턴스로 분산<ul>
+<li>사용 목적 :<ul>
+<li>부하분산 및 고가용성(HA) 확보</li>
+</ul>
+</li>
+<li>구성 요소 :<ul>
+<li>frontend IP : 외부에서 접속 가능한 IP</li>
+<li>backend pool : 내부의 트래픽 분산 대상 서버(VM/VMSS) 그룹</li>
+<li>ruleset : 특정 포트와 프로토콜로 들어오는 트래픽을 백엔드 풀의 서버로 어떻게 분산할지 정의</li>
+<li>health probe :</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>네트워크 흐름:<ul>
+<li>Outbound : 웹/WAS 서버(사설 IP) -&gt; NAT Gateway/Load Balancer -&gt; 공용 IP 주소 -&gt; 외부 Target</li>
+<li>Inbound : 외부 Source -&gt; Load Balancer(ruleset filtering) -&gt; 웹/WAS 서버(사설 IP)</li>
+</ul>
+</li>
+<li>WEB/WAS에서 LB나 NAT 구성 방법 및 관련된 Azure Service:<ul>
+<li>LB 관련 서비스:<ul>
+<li>Azure Load Balancer: TCP/UDP 트래픽을 분산하는 L4 로드 밸런서</li>
+<li>Azure Application Gateway: HTTP/HTTPS 트래픽을 분산하는 L7 로드 밸런서, WAF기능 포함</li>
+<li>Azure Front Door: 글로벌 트래픽 분산을 위한 CDN, WAF, SSL 오프로드 기능 등을 제공</li>
+</ul>
+</li>
+<li>NAT 관련 서비스:<ul>
+<li>Azure NAT Gateway: 서브넷 단위로 아웃바운드 SNAT 기능을 제공하는 서비스</li>
+<li>Azure Load Balancer: 제한적으로 Outbound Connectivity를 지원하여 NAT기능을 지원(정적 port할당 및 NAT Gateway비해 우선권 낮음)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련 링크<ul>
+<li>Azure Virtual Network 설명서: <a href="https://learn.microsoft.com/ko-kr/azure/virtual-network/virtual-networks-overview">https://learn.microsoft.com/ko-kr/azure/virtual-network/virtual-networks-overview</a></li>
+<li>Azure Load Balancer 설명서: <a href="https://learn.microsoft.com/ko-kr/azure/load-balancer/load-balancer-overview">https://learn.microsoft.com/ko-kr/azure/load-balancer/load-balancer-overview</a></li>
+<li>Azure NAT Gateway 설명서: <a href="https://learn.microsoft.com/ko-kr/azure/virtual-network/nat-gateway-resource">https://learn.microsoft.com/ko-kr/azure/virtual-network/nat-gateway-resource</a></li>
+<li>Azure에서 아웃바운드 연결에 대한 이해: <a href="https://learn.microsoft.com/ko-kr/azure/load-balancer/load-balancer-outbound-connections">https://learn.microsoft.com/ko-kr/azure/load-balancer/load-balancer-outbound-connections</a></li>
+</ul>
+</li>
+</ul>
+<h2>5. Saving Plan, Reserved Instance을 활용한 비용절감 방안 이해</h2>
+<ul>
+<li>Savings plan이랑 RI가 가능한 리소스와 불가능한 리소스에 대한 문제</li>
+<li>정리<ul>
+<li>Savings Plan (SP) : 1년 또는 3년 단위로 사용금액에 대해 계약하면 온디맨드 요금 대비 할인된 요금으로 제공.<ul>
+<li>가능 리소스: Virtual Machines (VMs), App Service, Azure Functions, Azure Container Instances (ACI), Azure Dedicated Host 등</li>
+<li>불가능 리소스: 스토리지, 네트워킹, Cosmos DB 등 컴퓨팅 외 서비스</li>
+</ul>
+</li>
+<li>Reserved Instance (RI) : 1년 또는 3년 약정으로 특정 리소스에 대해 할인된 요금을 제공하는 약정 요금 모델.<ul>
+<li>가능 리소스: Virtual Machines (VMs), Azure Cosmos DB, Azure SQL Database, Azure Synapse Analytics 등.</li>
+<li>불가능 리소스: App Service, Azure Functions, Azure Container Instances (ACI) 등.</li>
+</ul>
+</li>
+<li>차이점:<ul>
+<li>Savings Plan: VM 유형이나 리전에 대해 유연함.</li>
+<li>Reserved Instance: 특정 인스턴스 유형과 리전에 고정됨.</li>
+<li>사용할 리소스가 예측가능한 워크로드라면 RI가 가성비 좋음.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련 링크<ul>
+<li>Azure Savings Plans: <a href="https://azure.microsoft.com/ko-kr/pricing/offers/savings-plan-compute/">https://azure.microsoft.com/ko-kr/pricing/offers/savings-plan-compute/</a></li>
+<li>Azure Reservations (Reserved Instances): <a href="https://azure.microsoft.com/ko-kr/reservations/">https://azure.microsoft.com/ko-kr/reservations/</a></li>
+<li>Savings Plan과 Reservations 비교: <a href="https://learn.microsoft.com/ko-kr/azure/cost-management-billing/savings-plan/decide-between-savings-plan-reservation">https://learn.microsoft.com/ko-kr/azure/cost-management-billing/savings-plan/decide-between-savings-plan-reservation</a></li>
+</ul>
+</li>
+</ul>
+<h2>6. Azure Storage Account 특징과 차이</h2>
+<ul>
+<li>기술적인 level까지는 출제되지않음</li>
+<li>crud 제약사항, 가용성에 대한부분. 예를들면 서비스 커버리지(region)에 따라 3가지로 나뉘는것들</li>
+<li>특징, 개념 등 어떤상품이 존재하고 어떤 상황에서 사용되는지에 대한 문제</li>
+<li>정리<ul>
+<li>Azure Storage 계정 유형:<ul>
+<li>범용 v2 계정: 가장 많이 사용되는 유형으로, Blob, File, Queue, Table 등 모든 Azure Storage 서비스 지원.</li>
+<li>블록 Blob 계정: 블록 Blob에 특화되어 고성능 제공. Blob 개체 저장 시 사용.</li>
+<li>파일 스토리지 계정: Azure Files에 특화, 대규모 파일 공유 시 최적화된 성능 제공.</li>
+<li>프리미엄 페이지 Blob 계정 (Premium Page Blobs): Page Blob 전용, VM 디스크나 데이터베이스 트랜잭션 로그 등 고성능 I/O 용도에 적합한 SSD 기반 계정.</li>
+</ul>
+</li>
+<li>복제 옵션:<ul>
+<li>LRS (로컬 중복 스토리지): 단일 데이터센터 내 3개의 데이터 복사본 유지. 가장 저렴하나, 데이터센터 장애 시 데이터 손실 위험.</li>
+<li>ZRS (영역 중복 스토리지): 한 지역 내 3개의 가용성 영역에 데이터 복제. 데이터센터 장애로부터 보호.</li>
+<li>GRS (지역 중복 스토리지): 주 지역과 수백 km 떨어진 보조 지역에 데이터 복제. 지역 전체 재해 대비.</li>
+<li>GZRS (지역 영역 중복 스토리지): GRS와 ZRS를 결합, 주 지역 내 3개 가용성 영역에 복제 후 보조 지역에도 복제.</li>
+<li>RA-GRS (Read-Access GRS): GRS에 보조 지역 데이터 읽기 권한을 추가한 옵션으로, 주 리전에 장애가 생겨도 보조 지역에서 읽기만 가능</li>
+<li>RA-GZRS: GZRS에 읽기 접근을 추가한 옵션으로, 고가용성과 재해 대비 읽기 접근성을 모두 확보가능.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>관련링크<ul>
+<li>Azure Storage 계정 개요: Azure Storage 계정의 개념, 유형, 용도 등을 확인 <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview</a></li>
+<li>Azure Storage 복제: 데이터 복제 옵션(LRS, ZRS, GRS, GZRS 등)에 대한 자세한 설명과 특징 <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-redundancy">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-redundancy</a></li>
+<li>Azure Storage 서비스 및 기능 요약: Azure Blob, Queue, Table, Files 등 각 스토리지 서비스에 대한 개요 <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-introduction">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-introduction</a></li>
+</ul>
+</li>
+</ul>
+<h2>7. VMSS 특성에 대한 이해(aws autoscaling 이랑 같은 서비스)</h2>
+<ul>
+<li><p>VMSS사용에 대한 최근동향에 대해 숙지.</p>
+</li>
+<li><p>Autoscaling을 구현하기위해 VMSS를 사용하는데 이때 주의점 숙지</p>
+</li>
+<li><p>너무 깊게까진 필요없지만 구성하는 순서라던지 LB로 어떻게 연결되는지 알아야함.</p>
+</li>
+<li><p>예를들어 WebApp하나를 배포한다하면 어떤흐름으로 VMSS를 구성하는지 문제</p>
+</li>
+<li><p>정리</p>
+<ul>
+<li><ul>
+<li><p>VMSS사용에 대한 최근동향에 대해 숙지.</p>
+<ul>
+<li>VMSS(가상 머신 스케일 세트)는 동일한 구성의 가상 머신(VM)을 그룹으로 관리하며, 규모에 따라 자동으로 VM 인스턴스 개수를 조정할 수 있습니다.</li>
+<li>기본 사용법:</li>
+<li><ul>
+<li>Azure Portal, CLI, ARM 템플릿 또는 PowerShell을 이용해 VMSS를 생성할 수 있습니다.</li>
+<li>이미지, 인스턴스 크기, 디스크 옵션, 네트워크, 인증 정보 등을 설정합니다.</li>
+<li>운영 중에 인스턴스 수를 수동/자동으로 확장(Scale Out) 또는 축소(Scale In)할 수 있습니다.</li>
+<li>VMSS 내 모든 인스턴스는 동일한 네트워크 및 부하 분산(LB) 구성에 연결할 수 있습니다.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Autoscaling을 구현하기위해 VMSS를 사용하는데 이때 주의점 숙지</p>
+<ul>
+<li>Autoscaling(자동 확장) 시 주요 주의사항:</li>
+<li><ul>
+<li>상태 유지(Stateful) 서비스 지원 여부: VMSS는 기본적으로 Stateless(무상태) 웹/앱 워크로드에 적합합니다. 세션 유지나 데이터 로컬리티가 필요한 경우 별도 설계 필요.</li>
+<li>이미지 관리: VMSS 인스턴스는 동일한 이미지를 사용하므로, image를 변경(업데이트)할 때 전체 롤링 업데이트 방식 적용.</li>
+<li>Auto-scaling Rule: CPU, 메모리, 네트워크 사용량 등 지표 기준으로 확장 규칙 설정. 과도한 Scale Out/In이 발생하지 않도록 쿨다운(Cooldown) 기간을 적절히 설정.</li>
+<li>기본 인스턴스 수 유지: 최소/최대/디폴트 인스턴스 개수를 정확히 설정하여 서비스 중단 방지.</li>
+<li>인스턴스 초기화 시간: VM 부팅 및 앱 배포에 소요되는 시간을 autoscale 정책에 반영해야 함.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>너무 깊게까진 필요없지만 구성하는 순서라던지 LB로 어떻게 연결되는지 알아야함.</p>
+<ul>
+<li><p><strong>VMSS 구성 순서</strong></p>
+<ol>
+<li>리소스 그룹 생성</li>
+<li>가상 네트워크(VNet)와 서브넷 생성</li>
+<li>VMSS 생성</li>
+<li><ul>
+<li>이미지, VM 크기, 인증 방식 등 설정</li>
+<li>네트워크 인터페이스에 가상 네트워크 선택</li>
+</ul>
+</li>
+<li>확장 정책(Scaling policy) 설정</li>
+<li><ul>
+<li>자동/수동 인스턴스 조정 옵션 선택</li>
+</ul>
+</li>
+</ol>
+<p><strong>LB(Load Balancer) 연결 방법</strong></p>
+<ul>
+<li>VMSS 생성 중 '부하 분산 장치(LB)와 연결' 항목에서 기존 또는 신규 LB 선택</li>
+<li>LB의 Backend Pool에 VMSS를 연결하여 트래픽이 자동 분산되도록 설정</li>
+<li>필요 시, LB에 Health Probe(상태 확인 프로브) 및 Load Balancing Rule(트래픽 라우팅 규칙)도 구성해야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>예를들어 WebApp하나를 배포한다하면 어떤흐름으로 VMSS를 구성하는지 문제</p>
+<ul>
+<li>VMSS 인스턴스에 WebApp 런타임 환경 사전 설정(예: IIS, .NET, Node.js 등)</li>
+<li>배포할 WebApp(코드 및 라이브러리 등)을 VMSS 이미지에 포함하거나, CI/CD 파이프라인과 연계해 각 인스턴스에 배포 자동화 구성</li>
+<li>LB(Layer 4/7)와 연결해 인바운드 웹 트래픽을 자동 분산 처리</li>
+<li>상태 무결성(Stateless) 구조 설계 권장(세션 유지 필요 시 Redis Cache 등 외부 저장소 활용)</li>
+<li>보안조치(SSL 인증서 설치/암호화, NSG 설정 등) 병행</li>
+</ul>
+</li>
+</ul>
+참고 정보 다운로드:
+<a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/overview">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/overview</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-overview?tabs=azure-portal">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-overview?tabs=azure-portal</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/quick-create-portal">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/quick-create-portal</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-use-vmss">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-use-vmss</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-lb">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-lb</a></li>
+</ul>
+</li>
+</ul>
+<h2>8. DNS Resolver 구성법: AWS/Azure/Onpremise DNS동기화를 위한 구성과 필요한 Network 구성</h2>
+<ul>
+<li><p>엔터프라이즈 환경에서는 internal로 보통 dns 구성을 하는데,, public으로 쓰려면 , 혹은 하이브리드로 할때 동기화 작업을 하게된다.</p>
+</li>
+<li><p>DNS관련 지식이 좀 있으면 좋지만 없어도 풀정도의 문제긴 함.</p>
+</li>
+<li><p>문제의도는 DNS를 public - onprem간에 sync를 (어떤 방화벽이나 프로토콜 포트 등)어떤방식으로 해야되는지 나올것임.</p>
+</li>
+<li><p>정리</p>
+<h2>Public–On-prem DNS 동기화 방식(방화벽/프로토콜/포트 관점)</h2>
+<h3>1. 네트워크 연결 구성</h3>
+<ul>
+<li><strong>VPN Gateway, 전용망(ExpressRoute/DirectConnect) 등</strong>을 이용해 Public 클라우드와 온프레미스 환경을 프라이빗으로 연결</li>
+<li>온프레미스 DNS와 퍼블릭 클라우드의 Private DNS 또는 DNS Resolver가 서로 통신할 수 있도록 사설 IP 대역을 지정</li>
+</ul>
+<h3>2. 방화벽 및 네트워크 보안구성</h3>
+<ul>
+<li>양방향 DNS 트래픽 허용 필요<ul>
+<li>온프레미스 &lt;-&gt; Public DNS 리졸버(예: Azure DNS Private Resolver)</li>
+<li>반드시 신뢰된 DNS 서버 IP만 허용하도록 ACL 및 방화벽 정책 설정</li>
+</ul>
+</li>
+</ul>
+<h4>방화벽 규칙 (예시)</h4>
+<p>|                |                     |         |      |
+| -------------- | ------------------- | ------- | ---- |
+| 온프레미스 DNS | 클라우드 DNS 리졸버 | TCP/UDP | 53   |
+| 클라우드 DNS   | 온프레미스 DNS      | TCP/UDP | 53   |</p>
+<ul>
+<li>DNS 동기화 및 쿼리, 포워딩을 위해 <strong>TCP와 UDP 모두 53번 포트</strong>를 방화벽에서 허용해야 함<ul>
+<li>UDP 53: 일반 쿼리 트래픽</li>
+<li>TCP 53: Zone Transfer, 대용량 패킷 처리 등</li>
+</ul>
+</li>
+<li>방화벽에서 DNS 서버의 IP 또는 VNet 서브넷 범위만 대상으로 정책 생성(불필요한 포트 오픈 방지)</li>
+<li>필요하면 SLAAC/IPv6가 활성화된 환경에서는 IPv6에 대한 포트/프로토콜도 반영 필요</li>
+</ul>
+<h3>3. DNS 동기화 방법</h3>
+<ul>
+<li><strong>포워딩 또는 Conditional Forwarding</strong> 구성<ul>
+<li>온프레미스 DNS에서 퍼블릭 DNS(클라우드 리졸버)가 관리하는 도메인을 포워딩</li>
+<li>클라우드 DNS 리졸버에서도 온프레미스 도메인에 대해 포워딩 룰 설정</li>
+</ul>
+</li>
+<li><strong>보안강화</strong><ul>
+<li>DNS 트래픽 외 모든 인바운드/아웃바운드 트래픽 차단</li>
+<li>DNS 서버 자체의 인증 및 트러스트 리스트 적용(Trusted IP 등)</li>
+<li>필요하면 TLS 기반의 DNS 통신(DNS over TLS/DoT 등) 고려</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>9. AKS Monitoring를 활용한 자원/Workload 모니터링 이해</h2>
+<ul>
+<li><p>VM/Container/Network 크게 3가지로 나뉘는데 이게 어떤역할을 하는지만.</p>
+</li>
+<li><p>azure monitor 활성화하면 어떤게 활성화 되는지 알면 된다.</p>
+</li>
+<li><p>정리</p>
+<ul>
+<li>VM/Container/Network 크게 3가지로 나뉘는데 이게 어떤역할을 하는지만.<ul>
+<li><strong>Virtual Machines(노드 모니터링)</strong><ul>
+<li>AKS를 구성하는 VM(Node)들의 동작 상태, 리소스 사용량(CPU, 메모리, 디스크), OS 로그, 네트워크 상태 등을 수집</li>
+<li>클러스터의 인프라 레이어에서 발생하는 장애나 성능 저하의 조기 탐지에 활용</li>
+</ul>
+</li>
+<li><strong>컨테이너(Pod/Workload 모니터링)</strong><ul>
+<li>워크로드로 실행되는 Pod별 상태, Container 성능, 기본/사용자 정의 메트릭, 컨테이너 로그 등 모니터링</li>
+<li>어플리케이션 수준의 장애 진단, 로그 분석, 워크로드 스케일 조정(오토스케일) 등에 필수</li>
+</ul>
+</li>
+<li><strong>네트워크(Network 모니터링)</strong><ul>
+<li>Pod 간 네트워크 지연, 패킷 드롭율, 네트워크 사용량, 트래픽 흐름 파악 등</li>
+<li>네트워크 관련 병목(서비스간 통신 장애 등), 정책 위반 및 보안 위협(이상 트래픽 등) 감지</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>azure monitor 활성화하면 어떤게 활성화 되는지 알면 된다.<ul>
+<li>Azure Monitor for Containers를 활성화하면 아래와 같은 항목이 자동 활성화됩니다:<ul>
+<li><strong>Log Analytics 작업 영역</strong> 생성 및 연동: 클러스터 및 워크로드 메트릭/이벤트/로그 저장</li>
+<li><strong>노드, 네임스페이스, 컨테이너, 컨트롤 플레인 등 주요 리소스 메트릭 수집</strong></li>
+<li><strong>Kube API 및 kube-system 로그, 사용자 정의 로그 수집 가능</strong></li>
+<li><strong>알림 규칙(Alert Rule) 등록 및 경고 알림</strong></li>
+<li><strong>자동 대시보드 생성(클러스터 상태, 워크로드 상태, 노드/컨테이너 상태 등)</strong></li>
+<li><strong>(Advanced) 네트워크 인사이트 및 Dependency Map</strong>: 네트워크 의존성, 흐름 시각화(별도 에이전트 필요)</li>
+<li><strong>메트릭 기반 자동 스케일링(Cluster/Pod Autoscale)과 연계</strong></li>
+<li><strong>Azure Policy 기반 규정 준수 상태 역시 모니터링 대시보드에서 통합 확인</strong></li>
+</ul>
+</li>
+<li>참고: 일부 항목(Trace, Dependency Map 등)은 추가 Agent 설치 또는 별도 설정이 필요할 수 있습니다.</li>
+</ul>
+</li>
+</ul>
+<p>참고자료 다운로드:
+<a href="https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-overview">https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-overview</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-onboard">https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-onboard</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-solution">https://learn.microsoft.com/ko-kr/azure/azure-monitor/containers/container-insights-solution</a></p>
+</li>
+</ul>
+<h2>10. Azure 기반 Messaging 구성법 및 필요로 하는 Azure 서비스</h2>
+<ul>
+<li><p>크게 4개(Event Grid, Event Hub, Service Bus, Relay) 가 있는데 대략적인 특징을 알고있으면 되는 개념적 문제</p>
+</li>
+<li><p>정리</p>
+<ul>
+<li><ul>
+<li><strong>Azure Messaging</strong>은 시스템 간의 비동기 통신, 데이터 스트림 처리, 이벤트 송수신, 미들웨어 구축 등 다양한 목적으로 사용됩니다.</li>
+<li>기본 구성 절차:<ol>
+<li>요구 사항에 따라 적절한 메시징 서비스 선택(예: 대규모 이벤트, 트랜잭션 큐, 실시간 메시지 등)</li>
+<li>Azure Portal이나 CLI, ARM 템플릿 등을 활용해 서비스 인스턴스 생성</li>
+<li>메시지 발신 및 수신 애플리케이션 개발(공식 SDK 및 API 지원)</li>
+<li>보안(Shared Access Key, AAD 인증 등) 및 메시지 지속성 설정</li>
+<li>필요 시, 모니터링/경고/재시도 등 운영 정책 적용</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<p>|                 |                                                              |
+| --------------- | ------------------------------------------------------------ |
+| <strong>Event Grid</strong>  | 대규모 이벤트 분배, 이벤트 기반 아키텍처                     |
+| <strong>Event Hub</strong>   | 실시간 이벤트/로그 스트림(빅데이터, IoT 등) 수집             |
+| <strong>Service Bus</strong> | 트랜잭션 메시지 큐, 복잡한 상호 응답 구조, FIFO, Dead-letter 지원 |
+| <strong>Relay</strong>       | 온프레미스 앱을 클라우드에서 직접 호출(방화벽 친화적 통신)   |</p>
+<h3>Event Grid</h3>
+<ul>
+<li><p><strong>역할</strong>: 이벤트 기반 아키텍처를 위한 이벤트 라우팅 서비스</p>
+</li>
+<li><p>특징</p>
+<ul>
+<li>이벤트 발행/구독 모델</li>
+<li>Azure 리소스 상태 변화, 커스텀 이벤트, SaaS 이벤트 처리 가능</li>
+<li>수신자는 HTTP 웹후크 또는 Azure 함수, Logic App 등</li>
+</ul>
+<h3>Event Hub</h3>
+</li>
+<li><p><strong>역할</strong>: 대용량 실시간 데이터 및 이벤트 수집, 스트리밍 서비스</p>
+</li>
+<li><p>특징</p>
+<ul>
+<li>초당 수백만 건 이상의 이벤트 처리 가능</li>
+<li>실시간 텔레메트리, 빅데이터 파이프라인, IoT 시나리오에 최적</li>
+<li>이벤트 분할(PARTITION) 및 소비자 그룹, 체크포인트 지원</li>
+</ul>
+<h3>Service Bus</h3>
+</li>
+<li><p><strong>역할</strong>: 신뢰성 높은 메시지 큐 서비스(엔터프라이즈 메시징)</p>
+</li>
+<li><p>특징</p>
+<ul>
+<li>FIFO(순서 보장), 세션, Dead-letter, 트랜잭션, 재시도 등 메시징 고급 기능 지원</li>
+<li>Queue(점대점) 및 Topic/Subscription(퍼블리시-서브스크라이브) 모델 제공</li>
+<li>기업 내 애플리케이션 간 복잡한 업무 데이터 교환에 적합</li>
+</ul>
+<h3>Relay</h3>
+</li>
+<li><p><strong>역할</strong>: 네트워크를 통한 직접 연결을 지원, 온프레미스 호스트 노출 필요 없도록 중계</p>
+</li>
+<li><p>특징</p>
+<ul>
+<li>하이브리드, 방화벽/프록시 친화적 통신(HTTP, TCP)</li>
+<li>클라우드에서 온프레미스 앱으로 직접 메시지 등 요청 전달 가능</li>
+<li>일반적으로 직접 연결이 불가능한 네트워크 간 안전한 통신 지원</li>
+</ul>
+</li>
+</ul>
+<p><strong>요약 표</strong></p>
+<p>|             |                          |                                    |
+| ----------- | ------------------------ | ---------------------------------- |
+| Event Grid  | 이벤트 배포, 라우팅      | Pub/Sub, HTTP endpoint, Azure 통합 |
+| Event Hub   | 실시간 데이터 스트림     | 대용량 데이터, 파이프라인, IoT     |
+| Service Bus | 트랜잭션 메시지 큐       | FIFO, Dead-letter, Topic 등 지원   |
+| Relay       | 네트워크 직접 연결, 중계 | 온프레미스-클라우드 안전 연결      |</p>
+<p>참고자료 다운로드:
+<a href="https://learn.microsoft.com/ko-kr/azure/event-grid/overview">https://learn.microsoft.com/ko-kr/azure/event-grid/overview</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/event-hubs/event-hubs-about">https://learn.microsoft.com/ko-kr/azure/event-hubs/event-hubs-about</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/service-bus-messaging/service-bus-messaging-overview">https://learn.microsoft.com/ko-kr/azure/service-bus-messaging/service-bus-messaging-overview</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/relay/relay-what-is-relay">https://learn.microsoft.com/ko-kr/azure/relay/relay-what-is-relay</a></p>
+</li>
+</ul>
+<h2>11. AKS Autoscale 이해: POD, Node(Node Group)</h2>
+<ul>
+<li><p>AKS 오토스케일링 관련 Container/Node 2가지로 나눠서 각각 어떤이벤트가 발생했을때 어떻게 처리하는지 알고있으면 되는 문제(기본적인 수준)</p>
+</li>
+<li><p>정리</p>
+<ul>
+<li><ul>
+<li><h2>1. AKS Autoscale로 Pod에 이벤트가 발생했을 때 처리 방법</h2>
+<ul>
+<li><p><strong>Pod Autoscale(Horizontal Pod Autoscaler, HPA)</strong>란 워크로드의 메트릭(CPU, 메모리 등)에 따라 Pod의 복제 수(Replica)를 자동으로 조정하는 기능입니다.</p>
+</li>
+<li><p>이벤트 발생 및 처리 흐름</p>
+<ol>
+<li>메트릭 수집<ul>
+<li>Metrics Server, Azure Monitor 등에서 현재 Pod의 리소스 사용량(예: 평균 CPU 80% 이상) 모니터링</li>
+</ul>
+</li>
+<li>스케일 이벤트 탐지<ul>
+<li>사전 정의된 임계치(Threshold) 초과 시 HPA가 스케일아웃(복제 증가) 또는 스케일인(감소) 이벤트를 감지</li>
+</ul>
+</li>
+<li>오토스케일러 동작<ul>
+<li>HPA Controller가 새로운 Pod 생성 또는 기존 Pod 제거 명령 실행</li>
+</ul>
+</li>
+<li>스케일 작업 반영<ul>
+<li>Kubernetes Scheduler가 적합한 노드에 신규 Pod 배치</li>
+<li>Pod가 준비(Ready) 상태가 된 후 서비스에 트래픽 분배</li>
+</ul>
+</li>
+<li>지속적 모니터링 및 반복<ul>
+<li>워크로드 변화에 따라 동적으로 Pod 수 조절 반복</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>주요 고려사항</p>
+<p>:</p>
+<ul>
+<li>HPA 정책의 타겟 메트릭과 쿨다운(Cooldown) 기간 적절히 설정</li>
+<li>Pod이 필요 수만큼 빠르게 늘어나도록 이미지, 초기화 속도 최적화 필요</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><h2>2. AKS Autoscale로 Node에 이벤트가 발생했을 때 처리 방법</h2>
+<ul>
+<li><p><strong>Node Autoscale(Cluster Autoscaler)</strong>란, 전체 클러스터 수준에서 스케줄 가능한 리소스(노드의 CPU/메모리)가 부족하거나 과잉 시 노드 풀 안의 VM(Node) 개수를 자동 조정하는 기능입니다.</p>
+</li>
+<li><p>이벤트 발생 및 처리 흐름</p>
+<ol>
+<li>스케줄 실패/리소스 부족 탐지<ul>
+<li>Pending 상태 Pod 또는 리소스 부족(노드 전체의 자원이 한계치 근접) 발생</li>
+</ul>
+</li>
+<li>Cluster Autoscaler 동작<ul>
+<li>신규 Pod을 수용할 여유가 없을 경우, Autoscaler가 VMSS(가상머신 스케일셋, Node Pool) 인스턴스 증가 요청</li>
+</ul>
+</li>
+<li>노드 증설 및 처리<ul>
+<li>새로운 VM(Node)가 Azure에서 자동으로 프로비저닝</li>
+<li>새 노드가 클러스터 조인(Join), Scheduler가 Pending Pod을 이 노드로 배치</li>
+</ul>
+</li>
+<li>리소스 초과 시 노드 축소<ul>
+<li>일정기간 비활성(Pod이 없는) 노드는 자동 축소(Scale In)</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>주요 고려사항</p>
+<p>:</p>
+<ul>
+<li>노드 생성에는 수 분이 걸릴 수 있으므로, 빠른 Auto Scaling을 위해 최소/최대 노드 수를 적절히 산정</li>
+<li>PodDisruptionBudget, 노드 풀 태그/라벨 등도 스케일에 영향을 준다</li>
+<li>노드 축소 조건(각종 유휴 타임아웃) 및 Pod 재스케줄링 정책을 사전에 검토</li>
+</ul>
+</li>
+</ul>
+<p><strong>요약 표</strong></p>
+<p>|                |                           |                                               |                        |
+| -------------- | ------------------------- | --------------------------------------------- | ---------------------- |
+| Pod Autoscale  | Pod CPU 80% 초과          | HPA가 Replica 늘림, Scheduler가 배치          | HPA 정책, 초기화 속도  |
+| Node Autoscale | Pending Pod 발생/자원부족 | Cluster Autoscaler가 VM Node 증설, Pod 재배치 | VM 생성속도, 축소 설정 |</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>참고자료 다운로드:
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/autoscale-cluster">https://learn.microsoft.com/ko-kr/azure/aks/autoscale-cluster</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/concepts-scale">https://learn.microsoft.com/ko-kr/azure/aks/concepts-scale</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/tutorial-kubernetes-scale">https://learn.microsoft.com/ko-kr/azure/aks/tutorial-kubernetes-scale</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/node-updates-kured">https://learn.microsoft.com/ko-kr/azure/aks/node-updates-kured</a></p>
+</li>
+</ul>
+<h2>12. AKS 설치 구성에 대한 이해: Ingress Controller, CNI, CSI (최근 업데이트 된 내용 확인 필요)</h2>
+<ul>
+<li><p>aks 구성방법에 있어서 예전이랑 명칭에서 달라진부분이 있는것 같다고 하심. (예전 기준은 모르겠지만 Docs기준으로 공부하면 될듯함)</p>
+</li>
+<li><p>최근 ingress controller 주로 쓰는게 2가지 있을텐데 이거 특징 확인</p>
+</li>
+<li><p>ingress 없이 pod로 바로 접속할수있는 방법</p>
+</li>
+<li><p>ingress, cni, csi 등 어떤기능을 하는건지 전체적으로 어떻게 구성하는지 알아야 하는 문제</p>
+</li>
+<li><p>정리</p>
+<ul>
+<li><p>aks 구성방법에 있어서 예전이랑 명칭에서 달라진부분이 있는것 같다고 하심. (예전 기준은 모르겠지만 Docs기준으로 공부하면 될듯함)</p>
+<ul>
+<li><h2>AKS 구성 방법</h2>
+<ul>
+<li><p><strong>필수 준비</strong>: Azure 구독, 리소스 그룹, 가상 네트워크 등</p>
+</li>
+<li><p>구성 절차</p>
+<ol>
+<li><p>리소스 그룹 생성</p>
+<ul>
+<li><code>az group create --name myResourceGroup --location eastus</code></li>
+</ul>
+</li>
+<li><p>AKS 클러스터 생성</p>
+<ul>
+<li><p>포털, Azure CLI, ARM 템플릿 등 다양한 방법 지원</p>
+</li>
+<li><p>예시(Azure CLI):</p>
+<pre><code>bash az aks create --resource-group myResourceGroup --name myAKSCluster --node-count 3 --enable-addons monitoring --generate-ssh-keys
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p>Kubectl 연결</p>
+<ul>
+<li><code>az aks get-credentials --resource-group myResourceGroup --name myAKSCluster</code></li>
+<li>이후 <code>kubectl</code> CLI로 네임스페이스, 워크로드 배포, 모니터링 등 운영</li>
+</ul>
+</li>
+<li><p>Add-ons 및 네트워크/스토리지 추가 구성</p>
+<ul>
+<li>필요에 따라 CNI, CSI, 인그레스 등 추가 구성</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>최근 ingress controller 주로 쓰는게 2가지 있을텐데 이거 특징 확인</p>
+<ul>
+<li><strong>TLS(SSL) 종단점 제공 및 자동 인증서 관리</strong><ul>
+<li>Let's Encrypt와 연동한 자동 TLS 발급 및 관리(예: cert-manager 통합)</li>
+<li>HTTPS 트래픽 암호화와 보안강화</li>
+</ul>
+</li>
+<li><strong>로드밸런싱 및 동적 라우팅 정책</strong><ul>
+<li>호스트/경로/헤더 등 다양한 조건에 따른 트래픽 분기 지원</li>
+<li>Canary 배포, A/B 테스팅, 트래픽 가중치 조정 등 롤링 업데이트, 블루-그린 배포 등에 활용</li>
+</ul>
+</li>
+</ul>
+<p><em>(최근 Ingress Controller로는 NGINX, Azure Application Gateway Ingress Controller 등이 대표적)</em></p>
+</li>
+<li><p>ingress 없이 pod로 바로 접속할수있는 방법</p>
+<ul>
+<li><p><strong>NodePort 서비스 이용</strong></p>
+<ul>
+<li><p>Pod를 직접 외부에서 노출할 수 없으므로, Kubernetes Service 리소스 중 <code>NodePort</code> 타입으로 배포</p>
+</li>
+<li><p>AKS 클러스터 노드의 퍼블릭 IP와 NodePort(예: 30000~32767)로 외부에서 바로 접근 가능</p>
+</li>
+<li><p>예시:</p>
+<pre><code>yaml apiVersion: v1kind: Servicemetadata:  name: my-nodeport-svcspec:  type: NodePort  selector:    app: my-app  ports:    - port: 80      targetPort: 8080      nodePort: 30080
+</code></pre>
+</li>
+<li><p>단, 보안(공개 접근) 및 확장성에 한계가 있어, 테스트/특수 목적 외에는 권장되지 않음</p>
+</li>
+</ul>
+</li>
+<li><p><strong>LoadBalancer 서비스 이용</strong></p>
+<ul>
+<li>Azure에서 퍼블릭 Load Balancer를 생성해 Pod 앞단에 배치</li>
+<li>별도의 Ingress 없이 외부 접속 가능</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>ingress, cni, csi 등 어떤기능을 하는건지 전체적으로 어떻게 구성하는지 알아야 하는 문제</p>
+<ul>
+<li><p>|             |                                                              |                                                              |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| <strong>Ingress</strong> | L7 트래픽 라우팅, SSL/TLS, 서비스 노출, HTTP(S) 경로 기반 라우팅 | Ingress Controller(NGINX 등) 배포, Ingress 리소스 정의       |
+| <strong>CNI</strong>     | Container Networking Interface, Pod간 네트워크 구현 (VNet 통합, 서브넷 분리 등 지원) | AKS 생성/수정시 Azure CNI 선택(기존 VNet 연결시 필수), 네트워크 정책 적용 |
+| <strong>CSI</strong>     | Container Storage Interface, 외부 스토리지(디스크, NFS, Azure Files 등) 연동 | AKS에 CSI Driver 설치, PVC(PersistentVolumeClaim)와 PV(PersistentVolume)로 연결 구성 |</p>
+<h3>간단 구성 예시</h3>
+<ul>
+<li><p><strong>Ingress</strong></p>
+<ul>
+<li><p>Helm 등으로 NGINX Ingress Controller 설치</p>
+<pre><code>bash helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginxhelm install ingress-nginx ingress-nginx/ingress-nginx
+</code></pre>
+</li>
+<li><p>Ingress 리소스 정의 및 배포</p>
+</li>
+</ul>
+</li>
+<li><p><strong>CNI</strong></p>
+<ul>
+<li>AKS 생성 시 <code>--network-plugin azure</code> 옵션 사용</li>
+<li>기본 VNet, 서브넷 사전 준비 필요</li>
+</ul>
+</li>
+<li><p><strong>CSI</strong></p>
+<ul>
+<li>Azure Disk, Azure Files 드라이버 준비</li>
+<li>StorageClass, PVC, PV 리소스 정의 후 애플리케이션과 연결</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>요약 테이블</strong></p>
+<p>|         |                                         |                                          |
+| ------- | --------------------------------------- | ---------------------------------------- |
+| Ingress | L7 트래픽 관리/분배, HTTPS, 경로별 처리 | 컨트롤러 설치, Ingress 리소스 생성       |
+| CNI     | Pod 네트워킹, VNet 연계                 | CNI 플러그인 선택, 네트워크 정책(필요시) |
+| CSI     | 외부 스토리지 연계                      | CSI 드라이버 설치, 스토리지 리소스 연결  |</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>참고자료 다운로드:
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/kubernetes-walkthrough-portal">https://learn.microsoft.com/ko-kr/azure/aks/kubernetes-walkthrough-portal</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/ingress-basic">https://learn.microsoft.com/ko-kr/azure/aks/ingress-basic</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/concepts-network">https://learn.microsoft.com/ko-kr/azure/aks/concepts-network</a>
+<a href="https://learn.microsoft.com/ko-kr/azure/aks/csi-storage-drivers">https://learn.microsoft.com/ko-kr/azure/aks/csi-storage-drivers</a></p>
+</li>
+</ul>
+<h2>13. AKS PV/PVC + Azure Files CSI</h2>
+<p>개념</p>
+<ul>
+<li>PV(PersistentVolume): 클러스터 수준에서 생성된 스토리지 리소스</li>
+<li>PVC(PersistentVolumeClaim): Pod가 요청하는 스토리지 요구사항(용량, 접근모드)</li>
+<li>Azure Files CSI Driver: Azure Files(File Share)를 Kubernetes에 연결하는 플러그인</li>
+<li>매핑 방식<ul>
+<li>동적 프로비저닝: <code>StorageClass</code>를 생성 → PVC 생성 → CSI Driver가 Azure File Share 자동 생성</li>
+<li>정적 프로비저닝: 이미 만든 Azure File Share를 PV로 등록 → PVC 바인딩</li>
+</ul>
+</li>
+</ul>
+<p>보안 포인트</p>
+<ul>
+<li>Storage Account Key 직접 노출 금지 → Managed Identity + CSI Secret Store 사용</li>
+<li>권한: Storage Account Key Operator 또는 Storage File Data SMB Share Contributor</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>AKS에서 Azure Files CSI Driver 사용하기</li>
+<li>Azure Files CSI Driver 개요</li>
+</ul>
+<hr />
+<h2>14. AKS Overlay Network</h2>
+<p>개념</p>
+<ul>
+<li>Overlay Network: Pod 네트워크(IP)를 노드 네트워크와 분리된 가상 네트워크로 구성</li>
+<li>AKS 기본 CNI: Azure CNI Overlay (Pod IP는 VNET과 분리된 내부 CIDR에서 할당)</li>
+<li>장점: VNET 주소 고갈 방지, 대규모 클러스터 구성 가능</li>
+<li>Overlay 미사용 시: Azure CNI 기본 모드에서 Pod IP를 VNET 서브넷에서 직접 할당</li>
+</ul>
+<p>학습 포인트</p>
+<ul>
+<li>Service Network: ClusterIP, NodePort, LoadBalancer 동작 방식</li>
+<li>Overlay → Pod to Pod 통신은 VXLAN 터널링</li>
+<li>Pod IP 할당 위치 차이 이해</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>Azure CNI Overlay 네트워킹 개요</li>
+<li>AKS 네트워킹 개요</li>
+</ul>
+<hr />
+<h2>15. GitHub Actions 기술 구조 &amp; Trigger</h2>
+<p>개념</p>
+<ul>
+<li>워크플로 파일 위치: <code>.github/workflows/*.yml</code></li>
+<li>기본 구성</li>
+<li>Trigger 이벤트 예시: <code>push</code>, <code>pull_request</code>, <code>workflow_dispatch</code>(수동), <code>schedule</code>(cron)</li>
+<li>실행 순서: 트리거 발생 → GitHub Hosted Runner 또는 Self-Hosted Runner에서 실행 → 각 Step 수행</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>GitHub Actions 시작하기</li>
+<li>GitHub Actions 트리거 이벤트</li>
+</ul>
+<hr />
+<h2>16. CI/CD 최소 권한 &amp; 보안</h2>
+<p>개념</p>
+<ul>
+<li>Least Privilege: 필요한 리소스에 최소 권한만 부여</li>
+<li>Azure 접근 방식<ol>
+<li>Service Principal: 앱 등록 후 Client ID/Secret 사용 (비추천, 키 노출 위험)</li>
+<li>OIDC(OpenID Connect): GitHub → Azure 직접 연동, 비밀키 저장 불필요</li>
+</ol>
+</li>
+<li>Azure 권한 예시<ul>
+<li>ACR Push 전용: <code>AcrPush</code></li>
+<li>AKS 배포 전용: <code>Azure Kubernetes Service RBAC Writer</code></li>
+</ul>
+</li>
+</ul>
+<p>보안 포인트</p>
+<ul>
+<li>GitHub Environments에서 배포 승인/제한 가능</li>
+<li>Secret 대신 OIDC Claims 기반 인증</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>GitHub Actions와 Azure OIDC 연동</li>
+<li>Azure RBAC 역할 정의</li>
+</ul>
+<hr />
+<h2>17. Azure RBAC – Built-in Role / Role Group</h2>
+<p>개념</p>
+<ul>
+<li>Role-Based Access Control: 리소스별 접근 권한 부여</li>
+<li>Built-in Role 예시<ul>
+<li>Owner / Contributor / Reader</li>
+<li>AcrPush / Storage Blob Data Reader</li>
+</ul>
+</li>
+<li>Role Group: 여러 역할을 묶은 형태(Entra ID 그룹)</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>Azure RBAC 개요</li>
+<li>Azure Built-in Roles 목록</li>
+</ul>
+<hr />
+<h2>18. Azure Load Balancer</h2>
+<p>개념</p>
+<ul>
+<li>Scope<ul>
+<li>Zone: 특정 가용성 영역</li>
+<li>Regional: 동일 리전에 속한 리소스</li>
+<li>Global: 여러 리전 트래픽 분산 (Traffic Manager, Front Door)</li>
+</ul>
+</li>
+<li>Layer 4 LB: TCP/UDP 분산</li>
+<li>Layer 7 LB: HTTP/HTTPS 라우팅, WAF 가능 (Application Gateway, Front Door)</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>Azure Load Balancer 개요</li>
+<li>Azure 트래픽 분산 옵션 비교</li>
+</ul>
+<hr />
+<h2>19. AKS 권한 관리 – Entra ID vs Service Account</h2>
+<p>개념</p>
+<ul>
+<li>Entra ID (Azure AD):<ul>
+<li>kubectl 로그인 시 Azure AD 토큰 사용</li>
+<li>Azure RBAC → Kubernetes RBAC 매핑 가능</li>
+</ul>
+</li>
+<li>K8S Service Account:<ul>
+<li>Pod에 바인딩되는 계정</li>
+<li>API Server 접근 시 JWT 토큰 사용</li>
+</ul>
+</li>
+<li>차이점<ul>
+<li>Entra ID: 사용자/그룹 단위, Azure RBAC 기반</li>
+<li>Service Account: 워크로드 단위, Kubernetes 내부 RBAC 기반</li>
+</ul>
+</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>AKS Azure AD 통합</li>
+<li>Kubernetes Service Account</li>
+</ul>
+<pre><code class="language-plaintext">yaml복사편집name: CI on:push:branches: [ main ]  pull_request:branches: [ main ]jobs:build:runs-on: ubuntu-lateststeps:- uses: 
+</code></pre>
+<h2>20. Container 기본 개념 및 Dockerfile 이해</h2>
+<ul>
+<li>예를들어 dockerfile 에서 아래 두개의 차이점은 ?<ul>
+<li>RUN apt update &amp;&amp; apt install nginx</li>
+<li>RUN apt update
+RUN apt install nginx</li>
+</ul>
+</li>
+<li>두개로 레이어를 나누게되면 이미지 빌드 용량과 시간에 이득이 있을수는 있다</li>
+<li>하지만 docker cache때문에 apt update가 재수행되지 않는 치명적 단점이 있음</li>
+</ul>
+<p>개념</p>
+<ul>
+<li>Dockerfile에서 명령어를 한 줄(<code>&amp;&amp;</code>)로 묶느냐, 여러 줄(<code>RUN</code> 여러 개)로 나누느냐에 따라 이미지 레이어 생성 방식이 달라짐.</li>
+<li><strong><code>RUN apt update &amp;&amp; apt install nginx</code></strong><ul>
+<li>하나의 레이어 생성 → <code>apt update</code>와 <code>apt install</code>이 한 번에 수행됨</li>
+<li>캐시 무효화 시 두 작업 모두 재수행됨</li>
+</ul>
+</li>
+<li><strong><code>RUN apt update</code> + <code>RUN apt install nginx</code></strong><ul>
+<li>두 개의 레이어 생성 → Docker 캐시 때문에 <code>apt update</code>가 갱신되지 않을 수 있음(패키지 오래된 경우 문제 발생 가능)</li>
+<li>빌드 시간 단축 가능하지만 보안 패키지 업데이트에 취약</li>
+</ul>
+</li>
+<li>실무에서는 <strong>apt update → apt install을 한 줄로 묶고 <code>--no-cache</code> 옵션</strong> 사용을 권장</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li>Dockerfile에서 <code>RUN</code> 명령을 여러 번 사용하는 것과 한 번 사용하는 것의 차이를 설명하시오.</li>
+<li><code>apt update</code>를 <code>RUN</code> 명령에서 따로 실행했을 때 발생할 수 있는 문제점은 무엇인가?</li>
+<li>이미지 빌드 시 패키지가 최신 상태가 아니게 되는 원인을 설명하시오.</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Dockerfile best practices(<a href="https://docs.docker.com/build/building/best-practices/">https://docs.docker.com/build/building/best-practices/</a>)</li>
+</ul>
+<h2>21. Support VM OS SKU 및 Migration 방법(제약사항)</h2>
+<ul>
+<li>VM type에 따라서 가용한 OS가 다르다고 함. 이 제약사항에 대한 문제</li>
+<li>vmware vm 이랑 azure로 마이그할때 의 내용일것이다....</li>
+</ul>
+<p>개념</p>
+<ul>
+<li>Dockerfile에서 명령어를 한 줄(<code>&amp;&amp;</code>)로 묶느냐, 여러 줄(<code>RUN</code> 여러 개)로 나누느냐에 따라 이미지 레이어 생성 방식이 달라짐.</li>
+<li><strong><code>RUN apt update &amp;&amp; apt install nginx</code></strong><ul>
+<li>하나의 레이어 생성 → <code>apt update</code>와 <code>apt install</code>이 한 번에 수행됨</li>
+<li>캐시 무효화 시 두 작업 모두 재수행됨</li>
+</ul>
+</li>
+<li><strong><code>RUN apt update</code> + <code>RUN apt install nginx</code></strong><ul>
+<li>두 개의 레이어 생성 → Docker 캐시 때문에 <code>apt update</code>가 갱신되지 않을 수 있음(패키지 오래된 경우 문제 발생 가능)</li>
+<li>빌드 시간 단축 가능하지만 보안 패키지 업데이트에 취약</li>
+</ul>
+</li>
+<li>실무에서는 <strong>apt update → apt install을 한 줄로 묶고 <code>--no-cache</code> 옵션</strong> 사용을 권장</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li>Dockerfile에서 <code>RUN</code> 명령을 여러 번 사용하는 것과 한 번 사용하는 것의 차이를 설명하시오.</li>
+<li><code>apt update</code>를 <code>RUN</code> 명령에서 따로 실행했을 때 발생할 수 있는 문제점은 무엇인가?</li>
+<li>이미지 빌드 시 패키지가 최신 상태가 아니게 되는 원인을 설명하시오.</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Dockerfile best practices(<a href="https://docs.docker.com/build/building/best-practices/">https://docs.docker.com/build/building/best-practices/</a>)</li>
+</ul>
+<h2>22. AKS 장애 대응:Node Not Ready,POD Pending 등 이슈 원인 파악 및 대응방법 이해</h2>
+<ul>
+<li>k8s 파드배포 문제상황에 따른 원인 에 대한 문제( crashpullbackoff, pending 등, azure 서비스의 문제가 아니라 k8s의 문제로 생각하고 풀어야하는 문제)</li>
+</ul>
+<p>개념</p>
+<ul>
+<li><strong>Node Not Ready</strong><ul>
+<li>원인: 노드 다운, 네트워크 불가, Kubelet 장애, 자원 부족</li>
+<li>대응: 노드 상태 확인(<code>kubectl describe node</code>), 재시작, 노드 교체</li>
+</ul>
+</li>
+<li><strong>Pod Pending</strong><ul>
+<li>원인: 자원 부족, 스케줄링 불가, PVC 미할당</li>
+<li>대응: 리소스 요청 조정, 노드풀 확장, 스케줄러 제약 확인</li>
+</ul>
+</li>
+<li><strong>CrashLoopBackOff</strong><ul>
+<li>원인: 앱 오류, 잘못된 환경변수, 의존 서비스 불가</li>
+<li>대응: 로그 분석(<code>kubectl logs</code>), readiness/liveness probe 확인</li>
+</ul>
+</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li><code>Node Not Ready</code> 상태의 주요 원인과 대응 방법을 설명하시오.</li>
+<li>Pod이 <code>Pending</code> 상태로 머무르는 원인을 두 가지 이상 쓰시오.</li>
+<li><code>CrashLoopBackOff</code> 상태일 때 문제를 진단하는 절차를 설명하시오.</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Troubleshoot Kubernetes nodes(<a href="https://kubernetes.io/docs/tasks/debug/debug-cluster/">https://kubernetes.io/docs/tasks/debug/debug-cluster/</a>)</li>
+<li>Troubleshoot pods in AKS(<a href="https://learn.microsoft.com/ko-kr/troubleshoot/azure/azure-kubernetes/connectivity/troubleshoot-connection-pods-services-same-cluster">https://learn.microsoft.com/ko-kr/troubleshoot/azure/azure-kubernetes/connectivity/troubleshoot-connection-pods-services-same-cluster</a>)</li>
+</ul>
+<h2>23. Azure Network의 암호화 방식 단답식</h2>
+<ul>
+<li>문서 검색해서 풀면 될거라 하심.</li>
+</ul>
+<p>개념</p>
+<ul>
+<li>Azure 네트워크 암호화 방식:<ul>
+<li><strong>전송 중 암호화 (In-transit encryption)</strong>: TLS/SSL, IPsec VPN, ExpressRoute with MACsec</li>
+<li><strong>저장 시 암호화 (At-rest)</strong>: Azure Storage Service Encryption(AES-256)</li>
+<li><strong>MACsec</strong>: ExpressRoute Direct 연결 시 Layer 2 암호화</li>
+<li><strong>VPN Gateway</strong>: IPsec/IKE 암호화</li>
+</ul>
+</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li>Azure에서 전송 중 데이터 암호화를 위한 기술 2가지를 쓰시오.</li>
+<li>ExpressRoute에서 MACsec을 사용하는 목적은 무엇인가?</li>
+<li>Azure Storage에서 사용하는 기본 암호화 알고리즘은 무엇인가?</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Encryption overview(<a href="https://learn.microsoft.com/ko-kr/azure/virtual-network/virtual-network-encryption-overview">https://learn.microsoft.com/ko-kr/azure/virtual-network/virtual-network-encryption-overview</a>)</li>
+<li>MACsec in Azure(<a href="https://learn.microsoft.com/ko-kr/azure/expressroute/expressroute-howto-macsec">https://learn.microsoft.com/ko-kr/azure/expressroute/expressroute-howto-macsec</a>)</li>
+</ul>
+<h2>24. AKS의 이슈상황 원인과 대응방안 역량: POD Faile, FackOff, POD Schedule Design, Nodegroup scale in 시 고려해야할 POD Life Cycle 설정(서술형)</h2>
+<ul>
+<li>이슈상황 원인 및 대응방안에 관련된 문제. 서술형이라고 함.</li>
+<li>스케줄 배치문제<ul>
+<li>워커노드가 3대있고 파드 5대로 하면 같은 노드에 쏠릴수있는데 이거 해결할수있는거</li>
+</ul>
+</li>
+<li>컨테이너 생성되고 줄어들 때 컨테이너와 서비스의 연결구조<ul>
+<li>파드 스케줄 디자인할 때 어플리케이션이 충분히 뜰 수있는 시간을 줘야함(명시적으로) 라이브리스 레드니스</li>
+<li>인그레스 입장에서는 잘못연결되면 500대 에러가 뜸 .</li>
+<li>해당 방법을 방지할 방법에 대한 문제</li>
+</ul>
+</li>
+</ul>
+<p>개념</p>
+<ul>
+<li><strong>스케줄링 쏠림 방지</strong><ul>
+<li>PodAntiAffinity / TopologySpreadConstraints 지정</li>
+</ul>
+</li>
+<li><strong>Pod Life Cycle 고려</strong><ul>
+<li>Liveness Probe: 비정상 Pod 감지 후 재시작</li>
+<li>Readiness Probe: 서비스 연결 전 준비 상태 확인</li>
+</ul>
+</li>
+<li><strong>Scale-in 시 고려</strong><ul>
+<li>PodDisruptionBudget(PDB) 설정으로 가용성 유지</li>
+</ul>
+</li>
+<li><strong>Ingress와 연계</strong><ul>
+<li>Readiness probe 없으면 비정상 Pod에도 트래픽 전달 → 500 오류 발생 가능</li>
+</ul>
+</li>
+</ul>
+<p>참고 문서</p>
+<ul>
+<li>Configure pod scheduling(<a href="https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/">https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/</a>)</li>
+<li>Kubernetes probes(<a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/</a>)</li>
+</ul>
+<h1>B type</h1>
+<h2>1. 용도에 따른 Azure Storage Account 선택</h2>
+<ul>
+<li>topic 그대로 내용 문제</li>
+</ul>
+<p>개념</p>
+<ul>
+<li><strong>Storage Account 종류</strong><ul>
+<li>General-purpose v2 (GPv2): Blob, File, Queue, Table 지원 → 가장 범용</li>
+<li>BlockBlobStorage: 대규모 Blob 저장 최적화</li>
+<li>FileStorage: Azure Files 전용</li>
+<li>Premium vs Standard: IOPS/지연시간 차이</li>
+</ul>
+</li>
+<li>사용 시나리오에 맞춰 선택 필요</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li>GPv2와 BlockBlobStorage 계정의 차이를 설명하시오.</li>
+<li>Premium FileStorage가 적합한 경우는 언제인가?</li>
+<li>Table Storage를 사용하려면 어떤 Storage Account를 선택해야 하는가?</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Azure Storage account overview(<a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-account-overview</a>)</li>
+</ul>
+<h2>2. RAG를 위한 저장소/DBMS Azure 서비스 선택</h2>
+<ul>
+<li>topic 그대로 내용 문제(벡터db를 쓰려고할때 어떤거 주문해야될지, postgresql도 요즘 ddb지원한다고 함)</li>
+</ul>
+<p>개념</p>
+<ul>
+<li>RAG(Vector DB) 구현 시 선택지<ul>
+<li><strong>Azure AI Search</strong>: 벡터 검색 기능 지원</li>
+<li><strong>PostgreSQL Flexible Server</strong>: pgvector 확장 지원</li>
+<li><strong>Cosmos DB</strong>: 벡터 인덱스 지원(미리보기 기능)</li>
+</ul>
+</li>
+<li>데이터 크기, 질의 빈도, 확장성에 따라 선택</li>
+</ul>
+<p>예상 문제</p>
+<ol>
+<li>RAG 구현 시 Azure에서 제공하는 벡터 검색 가능한 서비스 2가지를 쓰시오.</li>
+<li>PostgreSQL에서 벡터 검색을 지원하기 위해 필요한 확장은 무엇인가?</li>
+<li>Cosmos DB 벡터 검색의 장점은 무엇인가?</li>
+</ol>
+<p>참고 문서</p>
+<ul>
+<li>Vector search in Azure AI Search(<a href="https://learn.microsoft.com/ko-kr/azure/search/vector-search-overview">https://learn.microsoft.com/ko-kr/azure/search/vector-search-overview</a>)</li>
+<li>pgvector on Azure PostgreSQL(<a href="https://learn.microsoft.com/ko-kr/azure/postgresql/flexible-server/how-to-use-pgvector">https://learn.microsoft.com/ko-kr/azure/postgresql/flexible-server/how-to-use-pgvector</a>)</li>
+<li>Vector search in Azure Cosmos DB(<a href="https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/vector-search">https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/vector-search</a>)</li>
+</ul>
+<h2>3. Azure Function Tier 특징이해와 선택(대용량 Batch를 위한 Function Tier)</h2>
+<ul>
+<li><p>3가지 tier가 있는데 특정상황 가정하고 어떤종류를 써야 적합한지에 대한 문제.(durable function)</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li><p>Azure Function은 이벤트 기반 서버리스 컴퓨팅 서비스</p>
+</li>
+<li><p>|                                                              |                                         |                 |
+| ------------------------------------------------------------ | --------------------------------------- | --------------- |
+| <a href="https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan">Flex Consumption plan</a> | ✅ Code-only ❌ Container (not supported) | ❌ Not supported |
+| <a href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-premium-plan">Premium plan</a> | ✅ Code-only ✅ Container                 | ✅ Code-only     |
+| <a href="https://learn.microsoft.com/en-us/azure/azure-functions/dedicated-plan">Dedicated plan</a> | ✅ Code-only ✅ Container                 | ✅ Code-only     |
+| <a href="https://learn.microsoft.com/en-us/azure/container-apps/functions-overview">Container Apps</a> | ✅ Container-only                        | ❌ Not supported |
+| <a href="https://learn.microsoft.com/en-us/azure/azure-functions/consumption-plan">Consumption plan</a> | ✅ Code-only ❌ Container (not supported) | ✅ Code-only     |</p>
+</li>
+<li><p>위 호스팅 계획 중에 3종류 비교하는 문제</p>
+<ul>
+<li>Consumption Plan: 초당 요금, 자동 확장, 5분 제한(기본).</li>
+<li>Premium Plan: 항상 준비된 인스턴스 제공, 장기 실행 가능, Durable Function 지원.</li>
+<li>Dedicated (App Service Plan): 장기 실행 지원, 비용 고정.</li>
+</ul>
+</li>
+<li><p>Durable Function 이란 상태를 저장하면서 복잡한 워크플로우나 오래 걸리는 작업을 실행할 수 있도록 해주는 확장 기능.</p>
+</li>
+</ul>
+<p>🔗 [Function Plan 종류]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale#consumption-plan">https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale#consumption-plan</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li>대규모 배치 작업에 적합한 플랜 선택 --&gt; Premium plan</li>
+<li>Durable Function을 지원하지 않는 플랜</li>
+</ul>
+</li>
+</ul>
+<h2>4. Azure Disk 관리 운영 상의 특징: 크기 조절방법 및 제약 사항, OS Reboot 필요 등</h2>
+<ul>
+<li><p>attach할때 용량수정할때 영향도 등 block storage 의 운영상 제약사항과 특징</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li><p>Azure Managed Disk는 VM에 부착 가능한 고성능 디스크</p>
+<p>|                  |                                            |                 |      |            |                       |                                                              |
+| ---------------- | ------------------------------------------ | --------------- | ---- | ---------- | --------------------- | ------------------------------------------------------------ |
+| Premium SSD (v1) | 고성능 워크로드 (Prod DB 등)               | O (온라인 가능) | X    | X          | 지역 일치 필요        | 성능은 디스크 크기에 따라 정해짐 (Provisioned IOPS/Throughput) |
+| Standard SSD     | 일반 워크로드, Dev/Test                    | O (온라인 가능) | X    | X          | 지역 일치 필요        | 성능은 IO에 따라 변동 (비예측적)                             |
+| Standard HDD     | 저비용, 비핵심 워크로드                    | O (온라인 가능) | X    | X          | 지역 일치 필요        | 높은 지연시간 / 낮은 IOPS                                    |
+| Premium SSD v2   | 차세대 고성능 디스크, 유연한 성능 제어     | O (온라인 가능) | X    | X          | 지원 지역 한정        | 성능(IOPS, Throughput)을 디스크 크기와 무관하게 설정 가능    |
+| Ultra Disk       | 초고성능 워크로드 (SAP HANA, 고성능 DB 등) | O (온라인 가능) | X    | X (조건부) | 일부 VM 시리즈만 지원 | Attach 후에도 실시간으로 성능 조정 가능 (IOPS, Throughput)   |</p>
+</li>
+<li><p>크기 축소는 불가, 확장은 가능 (최대 32TB)</p>
+</li>
+<li><p>디스크 확장 시 OS 레벨 파티션 확장 필요, 경우에 따라 재부팅 필요</p>
+</li>
+<li><p>운영 중 디스크 확장 = 일부 환경에서 Live Resize 지원</p>
+</li>
+</ul>
+<p>🔗 [디스크 크기 조정 문서]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/disks-types#resizing-managed-disks">https://learn.microsoft.com/en-us/azure/virtual-machines/disks-types#resizing-managed-disks</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li>확장 후 OS 인식 방법</li>
+<li>디스크 attach시 제약 여부</li>
+</ul>
+</li>
+</ul>
+<h2>5. Terraform 내용 이해</h2>
+<ul>
+<li><p>문제 잘 읽으면 엉뚱한 부분이 있을거라 하심.</p>
+</li>
+<li><p>azure portal에서 용어랑 terraform 문법과 다른것이 있을텐데 그게 문제로 나올것임.(테라폼 LB 생성하는부분 봐둬라)</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li><p>Terraform은 인프라를 코드로 관리하는 도구 (IaC).</p>
+</li>
+<li><p>예시 코드</p>
+<blockquote>
+<p>resource &quot;azurerm_resource_group&quot; &quot;example&quot; { name = &quot;LoadBalancerRG&quot; location = &quot;West Europe&quot; }resource &quot;azurerm_public_ip&quot; &quot;example&quot; { name = &quot;PublicIPForLB&quot; location = azurerm_resource_group.example.location resource_group_name = <a href="http://azurerm_resource_group.example.name/">azurerm_resource_group.example.name</a> allocation_method = &quot;Static&quot; }resource &quot;azurerm_lb&quot; &quot;example&quot; { name = &quot;TestLoadBalancer&quot; location = azurerm_resource_group.example.location resource_group_name = <a href="http://azurerm_resource_group.example.name/">azurerm_resource_group.example.name</a>frontend_ip_configuration { name = &quot;PublicIPAddress&quot; public_ip_address_id = <a href="http://azurerm_public_ip.example.id/">azurerm_public_ip.example.id</a> } }</p>
+</blockquote>
+</li>
+<li><p>Azure에서 Load Balancer 정의 시 리소스 이름이 포털 UI와 다름.</p>
+<ul>
+<li>예: <code>azurerm_lb</code>, <code>azurerm_lb_backend_address_pool</code></li>
+</ul>
+</li>
+<li><p>Portal UI 용어와 코드 간 매핑 정확히 이해 필요.</p>
+</li>
+</ul>
+<p>🔗 [Load Balancer Quickstart]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/load-balancer/quickstart-load-balancer-standard-public-portal?tabs=azure-portal">https://learn.microsoft.com/en-us/azure/load-balancer/quickstart-load-balancer-standard-public-portal?tabs=azure-portal</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li>Terraform 코드의 구성요소를 Azure 포털과 매칭</li>
+</ul>
+</li>
+</ul>
+<h2>6. 비용 최적화 방안: Saving Plan, RI, Size 조절, VM Schedule 방안에 대한 이해와 적용법</h2>
+<ul>
+<li><p>가장 비용효율적인것 순서대로 고르시오라는 문제</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li>Reserved Instance (RI): 약정 기반, 가장 저렴</li>
+<li>Savings Plan: RI보다 유연, 사용량 기반 할인, 동적 or 자주 변화, 다양한 인스턴스 패밀리 사용하는 경우, 워크로드가 다른 데이터 센터 지역에서 실행되거나 이전되는 경우</li>
+<li>사이즈 조절: 적정 리소스 사용 -&gt; 사용에 따라 cpu, mem 점유율 비교</li>
+<li>VM Schedule (Auto-start/stop): Dev/Test 환경에 유용</li>
+</ul>
+<p>🔗 [RI vs Saving Plan 비교]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/cost-management-billing/savings-plan/decide-between-savings-plan-reservation">https://learn.microsoft.com/en-us/azure/cost-management-billing/savings-plan/decide-between-savings-plan-reservation</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li>가장 효과적인 비용 절감 방식 순서</li>
+</ul>
+</li>
+</ul>
+<h2>7. PV, PVC 운영상의 특징(Azure File)</h2>
+<ul>
+<li><p>private endpoint 에 대해서 public으로 연결할 수 있는 방법</p>
+</li>
+<li><p>smb프로토콜과 타 프로토콜의 차이 등에 대해 알아야한다.</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li>PV (Persistent Volume): 클러스터 외부에 존재하는 실제 저장소 (Azure File 등)</li>
+<li>PVC (Persistent Volume Claim): Pod가 요청하는 저장소의 사양</li>
+<li>Kubernetes가 PVC 요청을 PV에 바인딩해 제공.</li>
+<li>Azure File은 SMB 프로토콜 사용 파일 스토리지.</li>
+<li>Azure Files (SMB 기반)<ul>
+<li>Azure VM에서 Windows 파일 공유용으로 사용</li>
+<li>다수 VM 간 공유 마운트 가능</li>
+<li>Azure Kubernetes Service에서 PVC(PersistentVolumeClaim)로 사용 가능 (Windows Pod)</li>
+</ul>
+</li>
+<li>Azure NetApp Files (NFS 지원)<ul>
+<li>고성능 NFS 스토리지 필요할 때 사용 (HPC, SAP, 대용량 데이터 처리 등)</li>
+<li>Linux 기반 워크로드에 적합</li>
+</ul>
+</li>
+<li>Private Endpoint가 설정되면 public 접근 불가.<ul>
+<li>해결: Bastion, Jumpbox 등 경유 접근</li>
+</ul>
+</li>
+</ul>
+<p>🔗 [Azure Files 마운트 가이드]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-portal#mount-the-azure-files-share-on-linux">https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-portal#mount-the-azure-files-share-on-linux</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li>Private endpoint 설정된 Azure File에 외부 접근 방식</li>
+<li>SMB vs NFS 차이</li>
+<li>PV, PVC 역할 구분</li>
+</ul>
+</li>
+</ul>
+<h2>8. Express Route 개념 및 SKU Tier 특징 이해</h2>
+<ul>
+<li><p>sku tier 3가지가 있는데 특징에 대한 문제</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li><p>ExpressRoute는 Azure와 온프레미스를 전용 사설 네트워크로 연결하는 서비스.</p>
+</li>
+<li><p>3가지 SKU Tier:</p>
+<ul>
+<li>Standard: 지역 간 연결, 대부분 워크로드에 적합</li>
+<li>Premium: 글로벌 연결, 다중 리전 활용 가능</li>
+<li>Local: 로컬 피어링만 지원, 저렴함</li>
+</ul>
+</li>
+<li><p>대역폭, 접근 가능 Azure 리전 수 차이 존재</p>
+<p>|          |                                                              |                             |                                 |                                                              |
+| -------- | ------------------------------------------------------------ | --------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| Local    | 동일 Azure 리전 내만 사용 가능 (예: Paris → France Central)  | 최대 10개 (Standard와 동일) | 최대 4,000개                    | 비용 효율적 로컬 전용 옵션(<a href="https://dev.to/omiossec/azure-express-route-in-deep-27b2?utm_source=chatgpt.com">DEV Community</a>) |
+| Standard | 동일 지정된 geopolitical region 내 모든 Azure 리전 (예: 유럽 국가들) | 최대 10개                   | 기본 4,000개                    | 일반 사용 사례에 적합한 기본형(<a href="https://docs.azure.cn/en-us/expressroute/expressroute-faqs?utm_source=chatgpt.com">docs.azure.cn</a>) |
+| Premium  | 모든 Azure 리전 글로벌 범위 허용                             | 최대 100개                  | 최대 10,000개 (프라이빗 피어링) | 글로벌 확장, Global Reach 지원(<a href="https://dev.to/omiossec/azure-express-route-in-deep-27b2?utm_source=chatgpt.com">DEV Community</a>, <a href="https://docs.azure.cn/en-us/expressroute/expressroute-faqs?utm_source=chatgpt.com">docs.azure.cn</a>, <a href="https://tutorialsdojo.com/azure-expressroute/?utm_source=chatgpt.com">Tutorials Dojo</a>) |</p>
+</li>
+</ul>
+<p>🔗 [ExpressRoute SKU Tier]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways">https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways</a></p>
+<p>)</p>
+<p><a href="https://azure.microsoft.com/ko-kr/pricing/details/expressroute/#purchase-options">https://azure.microsoft.com/ko-kr/pricing/details/expressroute/#purchase-options</a></p>
+<h3>예상 문제</h3>
+<ul>
+<li>리전 간 통신이 필요한 경우 적절한 SKU</li>
+<li>ExpressRoute Local 제한 사항</li>
+</ul>
+</li>
+</ul>
+<h2>9. DNS Resolver 방법 및 개념</h2>
+<ul>
+<li><p>Part1과 동일</p>
+</li>
+<li><h3>요약</h3>
+<ul>
+<li>Azure DNS Private Resolver는 Azure VNet 및 온프레미스 환경 간에 DNS 쿼리를 안전하고 효율적으로 처리할 수 있는 완전 관리형 서비스, 별도의 DNS VM 없이도 DNS 포워딩 설정이 가능.</li>
+<li>Inbound Endpoint: 외부 요청을 VNet에 전달, 온프레미스 또는 외부에서 들어오는 DNS 요청을 처리하는 IP. VNet 내부 IP여야 하며, 별도의 서브넷에 구성</li>
+<li>Outbound Endpoint: VNet 내 리소스가 외부 DNS 조회.</li>
+<li>Ruleset: VNet 내 리소스가 외부 DNS 또는 온프레미스 DNS로 특정 도메인을 포워딩할 때 사용</li>
+<li>Ruleset을 설정해 특정 도메인을 특정 DNS로 라우팅 가능</li>
+</ul>
+<p>🔗 [Private Resolver Overview]</p>
+<p>(</p>
+<p><a href="https://learn.microsoft.com/en-us/azure/dns/dns-private-resolver-overview">https://learn.microsoft.com/en-us/azure/dns/dns-private-resolver-overview</a></p>
+<p>)</p>
+<h3>예상 문제</h3>
+<ul>
+<li><p>On-prem에서 Azure DNS 조회 시 필요한 구성</p>
+</li>
+<li><p>특정 도메인을 외부 DNS로 보낼 때 필요한 설정</p>
+</li>
+<li><p>예시 구성 흐름</p>
+<p>:</p>
+<ul>
+<li>VNet 내부 VM이 DNS 질의 발생</li>
+<li>Private DNS Zone 연결 여부 확인 → 내부 NS 조회</li>
+<li>일치하지 않으면 Ruleset 기반 Outbound Endpoint 조회</li>
+<li>도메인 매칭 시 설정된 대상 IP로 쿼리 포워딩</li>
+<li>일치하지 않으면 Azure DNS 이용</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>10. Istio Service Mesh 개념과 각 자원/서비스 용어와 이해</h2>
+<ul>
+<li><p>gateway, virtual host 등 용어만 알면 풀수있는 문제.</p>
+<h2>1. Istio Service Mesh 개념</h2>
+<ul>
+<li><strong>Service Mesh</strong>란 마이크로서비스 환경에서 서비스 간 통신(네트워크 트래픽)을 관리·보호·관찰하는 인프라 계층입니다.</li>
+<li><strong>Istio</strong>는 대표적인 오픈소스 Service Mesh 솔루션으로, Kubernetes 등 분산 시스템 환경에서 서비스를 연결하고, 트래픽 제어, 보안, 모니터링을 일관되게 제공합니다.</li>
+<li>Istio의 작동 방식:<ul>
+<li>각 애플리케이션 Pod 옆에 &quot;sidecar proxy&quot;(Envoy Proxy)를 자동 배치</li>
+<li>Istio Control Plane(istiod 등)이 전체 네트워크 트래픽 정책, 인증, 모니터링 등을 중앙에서 관리</li>
+<li>서비스 간 TLS, 라우팅, 감시(Observability) 기능을 sidecar proxy가 구현함</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>2. Istio 주요 자원/서비스 용어 설명</h2>
+<p>|                        |                                                              |
+| ---------------------- | ------------------------------------------------------------ |
+| <strong>Mesh</strong>               | Istio가 관장하는 서비스 통신의 전체 네트워크(네트워크 구성 전체) |
+| <strong>Control Plane</strong>      | Istio 전체 정책, 인증, 구성 등 식별/배포 역할(istiod)        |
+| <strong>Data Plane</strong>         | 실제 트래픽을 주고받는 sidecar proxy(Envoy)들이 배포되는 계층 |
+| <strong>Sidecar Proxy</strong>      | 서비스(애플리케이션) Pod 옆에서 네트워크 트래픽을 대리(프록시) 처리(Envoy Proxy) |
+| <strong>Service Entry</strong>      | 외부 서비스(클러스터 외부 포함)를 Mesh에 등록해 내부 라우팅 가능하게 하는 자원 |
+| <strong>DestinationRule</strong>    | 서비스 목적지에 대한 트래픽 정책(예: TLS 필요 여부, LB 방식) |
+| <strong>VirtualService</strong>     | 서비스 트래픽 라우팅 규정(경로, 헤더, 버전별 분배 등 상세 제어) |
+| <strong>Gateway</strong>            | 메쉬 외부와 내부 간 트래픽 입출구 역할(HTTP, HTTPS, TLS 등), Load Balancer 역할도 포함 |
+| <strong>Envoy Filter</strong>       | 추가 커스텀 트래픽 필터 및 동작 확장                         |
+| <strong>PeerAuthentication</strong> | Service Mesh 내 &quot;동료&quot;(Pod 등) 간 인증 정책(OS, JWT, Mutual TLS) 관리 |</p>
+<hr />
+<h2>3. Gateway, Virtual Host 등 용어 설명</h2>
+<ul>
+<li><strong>Gateway</strong><ul>
+<li>Istio Mesh에 외부(사용자, API, 클라우드 등) 트래픽을 받아들이는 진입점 역할</li>
+<li>HTTP, HTTPS, TLS, TCP 등 프로토콜기반 트래픽을 제어·필터링</li>
+<li>예를 들면 웹 서비스에 퍼블릭 Load Balancer가 연결되는 것과 유사한 역할을 수행</li>
+<li>Gateway 리소스와 VirtualService 리소스가 함께 사용되어 경로라우팅 정의</li>
+</ul>
+</li>
+<li><strong>Virtual Host (Istio 용어로는 VirtualService의 host개념)</strong><ul>
+<li>하나의 Gateway가 여러 서비스(호스트, 경로)로 트래픽을 분기 가능</li>
+<li><strong>VirtualService</strong>는 host(도메인/서비스명)와 경로(match 조건)별로 트래픽 라우팅 규칙을 세분화할 수 있음</li>
+<li>A/B테스트, Canary 배포, 라우팅 정책 변경 등 세밀한 트래픽 제어가 가능</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3>예시 구조 요약</h3>
+<ul>
+<li><strong>Gateway</strong>: 외부 트래픽 진입점 → Istio Gateway 리소스 정의(포트, 프로토콜, 호스트 정보)</li>
+<li><strong>VirtualService</strong>: 들어온 트래픽을 host/경로/헤더 등 정책에 따라 Service나 버전별로 분기 처리</li>
+</ul>
+<hr />
+<p><strong>요약 표</strong></p>
+<p>|                      |                                           |
+| -------------------- | ----------------------------------------- |
+| Service Mesh         | 서비스 간 네트워크 트래픽 관리 구조       |
+| Control/Data Plane   | 정책관리/트래픽 주고받기                  |
+| Sidecar Proxy(Envoy) | 트래픽 프록시 기능, 서비스 옆에 자동 배포 |
+| Gateway              | 외부 트래픽 진입점, L7 트래픽 제어        |
+| VirtualService/Host  | 트래픽 상세 라우팅, 도메인·경로 기반 분기 |
+| DestinationRule      | 트래픽 목적지 정책(LB, TLS 등)            |</p>
+<hr />
+<p>더 자세한 내용이 필요하면 예제 YAML이나 특정 정책 설명도 제공 가능합니다.
+참고:</p>
+<ul>
+<li><a href="https://istio.io/latest/docs/concepts/what-is-istio/">Istio 공식 문서</a> : <a href="https://istio.io/latest/docs/concepts/what-is-istio/">https://istio.io/latest/docs/concepts/what-is-istio/</a></li>
+<li><a href="https://istio.io/latest/docs/reference/config/networking/gateway/">Gateway 설명</a> : <a href="https://istio.io/latest/docs/reference/config/networking/gateway/">https://istio.io/latest/docs/reference/config/networking/gateway/</a></li>
+<li><a href="https://istio.io/latest/docs/reference/config/networking/virtual-service/">VirtualService 설명</a> : <a href="https://istio.io/latest/docs/reference/config/networking/virtual-service/">https://istio.io/latest/docs/reference/config/networking/virtual-service/</a></li>
+</ul>
+</li>
+</ul>
+<h2>11. AKS 성능 개선에 대한 이해</h2>
+<ul>
+<li><p>container 성능개선을 위해 size, resource control, worker node 분배 등에 대한 문제</p>
+<h2>1. 컨테이너 <strong>Size</strong> 조정</h2>
+<ul>
+<li><p><strong>적절한 이미지 경량화</strong>: 컨테이너 이미지를 최소한의 크기로(불필요한 라이브러리 제외) 빌드하면 배포/기동 속도가 빨라지고 OS/디스크 리소스 부담이 감소함</p>
+</li>
+<li><p>Pod/컨테이너 spec의 resource 설정</p>
+<ul>
+<li><p><code>requests</code>는 보장할 최소 리소스 (CPU, Memory)</p>
+</li>
+<li><p><code>limits</code>는 사용할 수 있는 최대 리소스</p>
+</li>
+<li><p>각 워크로드 특성에 맞게 신중하게 수치 선정(과소/과대 설정 방지)</p>
+</li>
+<li><p>예시)</p>
+<p>yaml
+<code>resources: requests: memory: &quot;256Mi&quot; cpu: &quot;250m&quot; limits: memory: &quot;512Mi&quot; cpu: &quot;500m&quot;</code></p>
+</li>
+</ul>
+</li>
+<li><p><strong>다양한 크기의 컨테이너 분리 배포</strong>: 경량화된 마이크로서비스는 작은 리소스, 고성능 처리 서비스는 더 큰 리소스 요청으로 분리</p>
+</li>
+</ul>
+<hr />
+<h2>2. <strong>Resource Control</strong> 방법</h2>
+<ul>
+<li>리소스 쿼터(Quota) 및 LimitRange 활용<ul>
+<li>네임스페이스 단위로 리소스 한계값(LimitRange, ResourceQuota) 설정해 과다한 리소스 점유 앱 제어</li>
+</ul>
+</li>
+<li>HPA(VPA) Autoscaler 적용<ul>
+<li><strong>Horizontal Pod Autoscaler(HPA)</strong>: 동적 메트릭(CPU 등)에 따라 Pod Replica 수 자동 증가/감소</li>
+<li><strong>Vertical Pod Autoscaler(VPA)</strong>: 애플리케이션의 실제 사용량 기반으로 Pod의 메모리/CPU 할당 동적 조정</li>
+</ul>
+</li>
+<li>QoS(Quality of Service) 클래스 고려<ul>
+<li>컨테이너별 QoS(Resource QoS: Guaranteed, Burstable, BestEffort) 클래스 구분 및 중요 앱에 Guaranteed 적용</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>3. <strong>Worker Node 분배/최적화</strong></h2>
+<ul>
+<li><p>Node Pool 분리 &amp; 노드 크기 선택</p>
+<ul>
+<li>부하 성격별로 별도의 Node Pool(예: 작은 VM Pool, 대형 VM Pool) 구성</li>
+<li>노드에 따라 VM 크기(메모리, CPU, 디스크/네트워크 사양) 다르게 구성</li>
+<li>예) 미션크리티컬 서비스: 고사양 노드, 일반 서비스: 경제적 노드</li>
+</ul>
+</li>
+<li><p>Affinity, Toleration, taint 활용</p>
+<ul>
+<li><p>특정 워크로드를 정해진 노드 Pool에 배치하도록 taint/toleration, affinity 규칙 사용</p>
+</li>
+<li><p>예시)</p>
+<p>yaml
+<code>nodeSelector: workload-type: high-memory</code></p>
+</li>
+</ul>
+</li>
+<li><p>분산 스케줄링 및 Drain/Upgrade 정책 관리</p>
+<ul>
+<li>Pod이 특정 노드에 과다하게 몰리지 않게 스케쥴링 옵션 사용</li>
+<li>노드 장애·업그레이드 시, <code>kubectl drain</code> 등으로 Pod 재배치 전략 구성</li>
+</ul>
+</li>
+<li><p>최소/최대 노드 Pool 사이즈 정책 설정</p>
+<ul>
+<li>Auto Scaling 및 Scale-In 시, 노드 Pool 내 지나친 Scale Out/In 방지</li>
+<li>리소스 피크에 대비한 최소 Pool 크기 확보</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3>요약 테이블</h3>
+<p>|                  |                                       |                                       |
+| ---------------- | ------------------------------------- | ------------------------------------- |
+| Size             | 이미지 경량화, pod resource 튜닝      | 리소스 spec 설정, 서비스 분할         |
+| Resource Control | 리소스쿼터, HPA/VPA, QoS              | 리소스 제한·분배 제어, Autoscale 적용 |
+| Worker 분배      | Node Pool 분리, Affinity/Taint/최적화 | 워크로드별 Pool 배치, 노드 크기 선택  |</p>
+<hr />
+<p><strong>참고자료</strong></p>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-resource">AKS 성능 및 최적화 공식 가이드</a> : <a href="https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-resource">https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-resource</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools">Node Pool 스케줄링</a> : <a href="https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools">https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Kubernetes Resource Management</a> : <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/</a></li>
+</ul>
+</li>
+</ul>
+<h2>12. Node Pool 개념 이해와 운영 방안 특징</h2>
+<ul>
+<li><p>공통자원은 전용 노드 사용 해야한다. (필수는 아닌데 가이드라인)</p>
+</li>
+<li><p>system node pool, user node pool 두가지 있는데 특정 조치를 할때 어떤 노드풀에 넣을지 문제</p>
+<h2>1. Node Pool 개념 이해</h2>
+<ul>
+<li><p><strong>Node Pool</strong>이란 AKS 클러스터에서 VM(노드)들의 집합을 의미합니다.</p>
+</li>
+<li><p>각 Pool은 서로 다른 VM 사양, OS 타입, 스케일(인스턴스 개수), 라벨 등을 가져서 다양한 워크로드 요구에 맞게 배포할 수 있음.</p>
+</li>
+<li><p>하나의 AKS 클러스터에 여러 Node Pool이 존재할 수 있고, 각 Pool에 호환되는 Pod/워크로드만 배치 가능.</p>
+</li>
+<li><p>Node Pool의 주요 목적</p>
+<p>:</p>
+<ul>
+<li>서비스 특성에 따라 고사양/저사양 노드 분리</li>
+<li>운영 시스템과 사용자 앱(워크로드) 분리</li>
+<li>OS/커널 버전 또는 보안 정책 별도 적용</li>
+<li>스케일링/유지보수/업그레이드 대상 분리 운용</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>2. Node Pool 운영 방안 특징</h2>
+<ul>
+<li><strong>운영 용이성</strong>: 클러스터 유지, 노드 업그레이드, 장애 대응 시 각 Pool 별로 관리 가능</li>
+<li><strong>유연한 배치</strong>: 워크로드별로 Pool을 라벨/taint/toleration/affinity 정책으로 구분하여, 적합한 리소스에 배치</li>
+<li><strong>최적화된 비용 관리</strong>: 자원 요구에 따라 Node Pool VM 사양 조절(비싼 VM은 최소 Pool만 유지), 리소스 낭비 방지</li>
+<li><strong>고가용성/보안</strong>: 미션크리티컬 서비스 Pool은 별도 관리(HA 구성), OS 보안패치 Pool별 적용 가능</li>
+<li><strong>오토스케일링</strong>: 각 Node Pool 별로 별도 스케일 인/아웃 정책을 설정해, 트래픽/자원 상황에 따라 관리</li>
+</ul>
+<hr />
+<h2>3. System Node Pool vs User Node Pool</h2>
+<p>|                      |                                                              |
+| -------------------- | ------------------------------------------------------------ |
+| <strong>System Node Pool</strong> | AKS 클러스터의 핵심 시스템(필수 Infra Pod, kube-system, Metrics Server 등)이 반드시 배포되는 Node Pool - 최소 1개는 반드시 존재해야 하며, 주로 Cluster 관리 목적(작고 저렴한 VM 사용 권장) |
+| <strong>User Node Pool</strong>   | 실제 비즈니스 워크로드(Pod), 사용자 앱, 마이크로서비스, 데이터처리 등 일반 서비스가 배포되는 Pool - VM 크기, OS, GPU, 스케일링 옵션 등을 자유롭게 지정 가능 |</p>
+<hr />
+<h3>워크로드별 Node Pool 배치 실무 지침</h3>
+<ul>
+<li><strong>System Node Pool</strong>에는 반드시 아래와 같은 AKS 관리/시스템 컴포넌트를 배포<ul>
+<li>kube-system 네임스페이스 Pod(코어 서비스)</li>
+<li>클러스터 모니터링, 네트워크, Ingress System 등 인프라 레벨 리소스</li>
+</ul>
+</li>
+<li><strong>User Node Pool</strong>에는 다음을 배포<ul>
+<li>실질적인 사용자 앱, 마이크로서비스, 백엔드 API, 데이터처리 등 업무 관련 Pod</li>
+<li>가중치 큰 리소스(예: GPU 활용 ML 워크로드), 특정 OS/커널 요구사항 등이 필요한 Pod</li>
+</ul>
+</li>
+</ul>
+<p><strong>특정 조치 예시</strong></p>
+<ul>
+<li><p>AKS 클러스터 업그레이드, 시스템 장애 복구 등 클러스터 관리 작업은 System Node Pool에 영향을 주지 않도록 사전에 백업/점검</p>
+</li>
+<li><p>사용자 서비스에 오류, 리소스 소진 등 이슈 발생 시 User Node Pool만 증설/교체해 시스템 자원 분리 보호</p>
+<p><strong>참고자료</strong></p>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools">AKS – 다중 Node Pool 공식 가이드</a> <a href="https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools">https://learn.microsoft.com/ko-kr/azure/aks/use-multiple-node-pools</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-node-pool">Node Pool 역할</a> <a href="https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-node-pool">https://learn.microsoft.com/ko-kr/azure/aks/operator-best-practices-node-pool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>13. CICD Pipeline 구성시 Credential관리 주의 사항에 대한 이해와 방법</h2>
+<ul>
+<li><p>제목그대로 한문제</p>
+<h2>1. 왜 Credential 관리가 중요한가?</h2>
+<ul>
+<li><strong>Credential(인증서, 패스워드, API Key 등)</strong>가 노출되면 소스코드 유출, 서버 침해, 계정 탈취 등 심각한 보안 사고로 이어질 수 있음</li>
+<li>특히 CICD 환경에서는 빌드 서버, 테스트 환경, 배포 대상 등 여러 위치에 인증정보가 자동으로 전달/사용되어 노출 위험 증가</li>
+<li>Credential이 잘못 관리되면 <strong>보안 취약점, 데이터 유출, 규정 위반(ISO, GDPR 등) 문제</strong>가 생길 수 있다</li>
+</ul>
+<hr />
+<h2>2. Credential 안전 관리 방법</h2>
+<h3>(1) 소스코드에 Credential 절대 저장 금지</h3>
+<ul>
+<li>패스워드, API Key, 인증서 등 환경 변수, 설정 파일 등으로 별도 분리</li>
+<li>Git, SVN 등 형상관리 시스템에는 Credential이 들어간 파일 Push 금지</li>
+</ul>
+<h3>(2) 비밀 관리 전용 솔루션 사용</h3>
+<ul>
+<li>클라우드 Secret Manager와 Vault 사용<ul>
+<li>Azure Key Vault, AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault 등</li>
+<li>CICD 파이프라인에서 API 또는 인증된 플러그인을 통해 비밀값을 호출</li>
+<li>비밀 추적 로그 및 접근 권한 정책 적용 가능</li>
+</ul>
+</li>
+</ul>
+<h3>(3) Credential 접근 권한 최소화</h3>
+<ul>
+<li>“필요한 서비스/권한만” 최소 범위로 적용(Principle of Least Privilege)</li>
+<li>CICD 계정별 Role-based Access Control(RBAC) 강화</li>
+</ul>
+<h3>(4) 암호화 및 전송 보안</h3>
+<ul>
+<li>Credential을 저장할 때는 강력 암호화 적용</li>
+<li>파이프라인 단계(빌드→배포)에서 Credential 전달 시 HTTPS/TLS 등 보안 채널 사용</li>
+</ul>
+<h3>(5) 환경 변수로 전달</h3>
+<ul>
+<li>빌드/배포 스크립트에서 환경 변수로만 Credential 전달</li>
+<li>환경 변수에 담긴 값은 실행 후 즉시 삭제, 로그에 노출 방지</li>
+</ul>
+<h3>(6) 만기 및 교체 정책 운영</h3>
+<ul>
+<li>Credential 사용기간 만료(Expiration) 정책 수립</li>
+<li>정기적으로 키와 비밀번호를 변경하는 로테이션 작업 자동화</li>
+</ul>
+<hr />
+<h2>3. 추가 보안 체크리스트</h2>
+<ul>
+<li>Credential Audit Log 및 접근 기록 반드시 관리</li>
+<li>접근 자동 탐지 및 경보(Alert) 설정(비인가 접근, 변경 감지 등)</li>
+<li>파이프라인 실패/오류 발생 시 Credential 자동 폐기(Leak 방지)</li>
+</ul>
+<hr />
+<p><strong>정리표</strong></p>
+<p>|                         |                                           |
+| ----------------------- | ----------------------------------------- |
+| 소스코드에 저장 금지    | Config 분리, Git Ignore, Static Scan 강제 |
+| 비밀 관리자 사용        | Key Vault, Secrets Manager, Vault 등 이용 |
+| 접근 권한 최소화        | RBAC, 최소 권한 Role 설정, 권한 자동 만료 |
+| 암호화 및 채널 보안     | TLS, HTTPS, 강력 암호화 키                |
+| 환경 변수 전달          | 일회성 변수 적용, 로그 노출 방지          |
+| 주기적 키/패스워드 변경 | Rotation, 자동 교체                       |
+| 감사로그 및 접근 기록   | Audit Log, Alert System 설정              |</p>
+<hr />
+<p><strong>참고</strong></p>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/devops/pipelines/release/cicd-secrets-key-vault">Azure Key Vault로 CICD Credential 관리</a> : <a href="https://learn.microsoft.com/ko-kr/azure/devops/pipelines/release/cicd-secrets-key-vault">https://learn.microsoft.com/ko-kr/azure/devops/pipelines/release/cicd-secrets-key-vault</a></li>
+<li><a href="https://www.vaultproject.io/docs/secrets">HashiCorp Vault와 CICD 통합</a> : <a href="https://www.vaultproject.io/docs/secrets">https://www.vaultproject.io/docs/secrets</a></li>
+<li><a href="https://owasp.org/www-project-cicd-security/">OWASP CICD Credential 보안 가이드</a> : <a href="https://owasp.org/www-project-cicd-security/">https://owasp.org/www-project-cicd-security/</a></li>
+</ul>
+</li>
+</ul>
+<h2>14. Github Action의 기본구성 이해와 기본 Task명에 대한 이해</h2>
+<ul>
+<li><p>git action으로 실행할 수 있는 task 종류(상동)</p>
+<h2>1. GitHub Actions 기본 구성 이해</h2>
+<ul>
+<li><strong>GitHub Actions</strong>는 GitHub 저장소 내 이벤트(코드 Push, PR 등) 발생 시 자동으로 워크플로우(파이프라인)를 실행하는 CI/CD 서비스입니다.</li>
+<li>구성의 중심은 <code>.github/workflows</code> 폴더 속 <code>YAML</code> 파일입니다.</li>
+</ul>
+<h3>기본 구성 객체</h3>
+<p>|              |                                                             |
+| ------------ | ----------------------------------------------------------- |
+| <strong>Workflow</strong> | 하나의 자동화 파일(예: <code>build.yml</code>) 전체/파이프라인 단위    |
+| <strong>Event</strong>    | 트리거(trigger), ex) <code>push</code>, <code>pull_request</code>, <code>schedule</code>     |
+| <strong>Job</strong>      | 독립적 실행 단위(병렬/순차)로 여러 Step 묶음                |
+| <strong>Runner</strong>   | 실제로 Job을 실행하는 컴퓨팅 리소스(공용, 자체 호스팅 가능) |
+| <strong>Step</strong>     | Job 내에서 개별 명령/Task(스크립트, 액션, 셸 등)            |
+| <strong>Action</strong>   | Step에서 호출하는, 재사용 가능한 Task 함수(공식/커스텀)     |</p>
+<h3>Workflow 예시 구조</h3>
+<p>yaml
+<code>name: CI Pipeline on: [push, pull_request] jobs: build: runs-on: ubuntu-latest steps: - name: Checkout uses: actions/checkout@v4 - name: Set up Node.js uses: actions/setup-node@v4 - name: Install dependencies run: npm install - name: Run tests run: npm test</code></p>
+<hr />
+<h2>2. 기본 Task명(주요 Action/Step)</h2>
+<p>대표적으로 많이 사용되는 기본 Task(액션 혹은 Step 명칭):</p>
+<p>|                               |                                                      |
+| ----------------------------- | ---------------------------------------------------- |
+| <strong>checkout</strong>                  | 소스코드를 워크플로우 러너에 체크아웃함              |
+| <strong>setup-node</strong>                | Node.js 개발 환경 준비                               |
+| <strong>run</strong>                       | 지정한 스크립트(명령, Shell) 직접 실행               |
+| <strong>setup-python</strong>              | Python 개발 환경 준비                                |
+| <strong>actions/upload-artifact</strong>   | 빌드 결과물(아티팩트) 업로드                         |
+| <strong>actions/download-artifact</strong> | 이전 Job의 아티팩트 다운로드                         |
+| <strong>setup-java</strong>                | Java 환경 준비                                       |
+| <strong>actions/cache</strong>             | 의존성/결과 etc 캐싱                                 |
+| <strong>deploy</strong>                    | 배포 명령(주로 커스텀 액션 혹은 배포 전용 스크립트)  |
+| <strong>actions/checkout</strong>          | 공식 소스코드 체크아웃 액션                          |
+| <strong>actions/setup-</strong>            | 특정 언어/환경 준비(예: setup-node, setup-python 등) |</p>
+<p><em>Step의 <code>name</code>은 자유롭게 정의 가능하나, 공식 Action은 <code>uses</code>에 사용함.</em></p>
+<hr />
+<h3>요약 표</h3>
+<p>|          |                               |                                          |
+| -------- | ----------------------------- | ---------------------------------------- |
+| Workflow | 자동화 파이프라인 문서        |                                          |
+| Event    | 트리거(자동실행 조건)         | push, pull_request                       |
+| Job      | 병렬/순차 실행 단위           | build, test, deploy 등                   |
+| Runner   | 실행 환경(호스팅/커스텀)      | ubuntu-latest 등                         |
+| Step     | 개별 처리 단위(액션/스크립트) | run: npm install 등                      |
+| Action   | Step 내 호출하는 Task 코드    | checkout, setup-node, upload-artifact 등 |</p>
+<hr />
+<p><strong>참고 자료</strong></p>
+<ul>
+<li><a href="https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions">GitHub Actions 공식 개념</a> <a href="https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions">https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions</a></li>
+<li><a href="https://github.com/marketplace?type=actions">공식 액션 Marketplace</a> : <a href="https://github.com/marketplace?type=actions">https://github.com/marketplace?type=actions</a></li>
+<li><a href="https://docs.github.com/en/actions/using-workflows/jobs">Action과 Step 구분</a> : <a href="https://docs.github.com/en/actions/using-workflows/jobs">https://docs.github.com/en/actions/using-workflows/jobs</a></li>
+</ul>
+</li>
+</ul>
+<h2>15. Storage의 암호화 방식에 대한 이해</h2>
+<ul>
+<li><p>검색잘하면 맞출만한 문제, 함정 느낌 살짝?</p>
+</li>
+<li><p>DB컬럼 암호화 같은게 섞여있는데 그게 .. 틀린것</p>
+<h2>1. Azure Storage 주요 암호화 방식</h2>
+<h3>(1) <strong>서버측 암호화(Server-Side Encryption, SSE)</strong></h3>
+<ul>
+<li>데이터가 Blob, File, Queue, Table 등 <strong>저장소에 저장될 때 자동으로 암호화</strong>됩니다.</li>
+<li>Microsoft에서 기본적으로 <strong>AES-256</strong> 대칭키로 각 데이터를 암호화</li>
+<li>애플리케이션 또는 사용자가 별도 암호화 코드를 작성하지 않아도 됨</li>
+<li>복호화는 Azure Storage가 자동 처리해 투명하게 제공</li>
+</ul>
+<h4>암호화 키 관리</h4>
+<ul>
+<li>기본 관리형 키(Microsoft Managed Keys)<ul>
+<li>Azure가 직접 키를 생성·관리(자동 회전 및 보안 관리)</li>
+</ul>
+</li>
+<li>고객 관리 키(Customer Managed Keys, CMK)<ul>
+<li>사용자가 Azure Key Vault 등에서 직접 키를 생성하여 Storage Account에 지정</li>
+<li>키의 주기적 교체, 삭제, 권한 제어 등 추가 보안 정책 적용이 가능</li>
+</ul>
+</li>
+</ul>
+<h3>(2) <strong>전송 데이터 암호화(In-Transit Encryption)</strong></h3>
+<ul>
+<li>클라이언트와 Azure Storage 간의 데이터 송수신은 <strong>TLS/SSL(HTTPS)</strong>로 암호화되어 전송됨</li>
+<li>인증서, HTTPS 필수 설정으로 패킷 가로채기 방지</li>
+</ul>
+<h3>(3) <strong>클라이언트측 암호화(Client-Side Encryption) (선택적 적용)</strong></h3>
+<ul>
+<li>사용자가 파일, 오브젝트를 저장하기 전에 직접 암호화하여 업로드하는 방식</li>
+<li>복호화 키는 Azure가 보관하지 않고, 고객이 자체적으로 관리</li>
+<li>강력한 보안이 필요할 때 별도로 활용(적용·관리는 고객 책임)</li>
+</ul>
+<hr />
+<h2>2. 서비스별 암호화 적용지원</h2>
+<p>|              |      |      |      |
+| ------------ | ---- | ---- | ---- |
+| Blob Storage | O    | O    | O    |
+| File Storage | O    | O    | O    |
+| Table/Queue  | O    | O    | O    |</p>
+<hr />
+<h2>3. 암호화 설정 예시 및 운영 포인트</h2>
+<ul>
+<li>기본적으로 Azure Storage Account를 생성하면 SSE가 자동 적용되어 별도 설정 불필요</li>
+<li>CMK를 사용할 때는 Azure Key Vault와 연동(역할 권한, 키 주기 관리 등) 필요</li>
+<li>Storage Account 정책에서 HTTPS만 허용하도록 &quot;Require secure transfer&quot; 옵션 설정</li>
+<li>규정 준수 강화를 위해 암호화 감사 로그, 키 접근 권한 정책을 병행하여 운영</li>
+</ul>
+<hr />
+<p><strong>요약</strong></p>
+<p>|              |                                                 |
+| ------------ | ----------------------------------------------- |
+| Server Side  | 데이터 저장 시 자동 AES-256 암호화, 복호화 투명 |
+| Customer Key | Key Vault 등 고객이 직접 관리(교체/권한/폐기)   |
+| In-transit   | TLS/SSL(HTTPS)로 전송 데이터 암호화             |
+| Client Side  | 업로드 전에 직접 암호화, 키 자체 관리           |</p>
+<hr />
+<p><strong>참고</strong></p>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-service-encryption">Azure Storage 암호화 공식 문서</a> <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-service-encryption">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-service-encryption</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/storage/common/customer-managed-keys-overview">CMK 설정 가이드</a> <a href="https://learn.microsoft.com/ko-kr/azure/storage/common/customer-managed-keys-overview">https://learn.microsoft.com/ko-kr/azure/storage/common/customer-managed-keys-overview</a></li>
+</ul>
+</li>
+</ul>
+<h2>16. Azure Native 보안 서비스 이해</h2>
+<ul>
+<li><p>어떤 서비스가 있는지 알면 되는 문제</p>
+<h2>Azure Native 보안 서비스 주요 종류 및 역할</h2>
+<h3>1. <strong>Azure Active Directory (AAD)</strong></h3>
+<ul>
+<li>Azure 기반의 <strong>ID 및 액세스 관리(SSO, MFA, RBAC, Conditional Access 등)</strong>를 담당</li>
+<li>클라우드 앱, 온프레미스 리소스 통합 인증/권한 통제 핵심 서비스</li>
+</ul>
+<h3>2. <strong>Microsoft Defender for Cloud</strong></h3>
+<ul>
+<li>클라우드 환경의 <strong>통합 보안 posture 관리, 위협 감지, 자동 정책권고</strong> 기능 제공</li>
+<li>서버, VM, Storage, DB, 컨테이너 등 다양한 서비스 대상으로 취약점·위협 탐지 및 대응</li>
+</ul>
+<h3>3. <strong>Azure Key Vault</strong></h3>
+<ul>
+<li><strong>비밀값(Secret), 인증서, 암호화 키</strong> 전용 저장소 및 관리 서비스</li>
+<li>보안 권한, 키 라이프사이클(회전·폐기), 감사로그 등 완전관리형 지원</li>
+</ul>
+<h3>4. <strong>Azure Firewall</strong></h3>
+<ul>
+<li>Azure Virtual Network 내에서 동작하는 <strong>완전 관리형 네트워크 방화벽</strong></li>
+<li>트래픽 필터링, 앱/네트워크 룰 제어, 위협 인텔리전스 기반 차단 지원</li>
+</ul>
+<h3>5. <strong>Azure DDoS Protection</strong></h3>
+<ul>
+<li>인터넷으로 노출된 Azure 리소스에 대한 <strong>DDoS(분산 서비스 거부 공격) 방어 자동화</strong></li>
+<li>실시간 트래픽 모니터링 및 자동 완화</li>
+</ul>
+<h3>6. <strong>Azure Security Center (Defender for Cloud에 통합)</strong></h3>
+<ul>
+<li><strong>보안 정책 설정, 컴플라이언스, 취약점 평가, 자동 권고</strong> 기능</li>
+</ul>
+<h3>7. <strong>Azure Policy</strong></h3>
+<ul>
+<li><strong>구성 정책/규정 준수 자동 적용 및 평가 도구</strong></li>
+<li>리소스 배포/관리 시 표준 규칙 적용(예: Storage 암호화, 네트워크 제한 등)</li>
+</ul>
+<h3>8. <strong>Azure Sentinel</strong></h3>
+<ul>
+<li>클라우드 기반 SIEM(이벤트/로그 통합 분석) 및 SOAR(자동 사고 대응) 서비스</li>
+</ul>
+<hr />
+<h2>요약표</h2>
+<p>|                    |                                           |
+| ------------------ | ----------------------------------------- |
+| Azure AD           | 인증/권한/SSO/MFA 관리                    |
+| Defender for Cloud | 통합 보안 posture, 위협 탐지, 권고 자동화 |
+| Key Vault          | 암호화 키, Secret, 인증서 완전관리형 저장 |
+| Azure Firewall     | 네트워크 트래픽 필터링, 룰 제어           |
+| DDoS Protection    | DDoS 공격 방어 자동화                     |
+| Policy             | 표준 정책 적용, 규정 준수 자동 점검       |
+| Sentinel           | SIEM/SOAR 통합 관리                       |</p>
+<hr />
+<h2>특징</h2>
+<ul>
+<li><strong>완전관리형/자동화</strong>: 별도 설치 없이 Azure 포털/콘솔에서 바로 설정·운영</li>
+<li><strong>클라우드/온프레미스/하이브리드 지원</strong>: Azure 자원뿐 아니라 외부 리소스까지 통합 보안 관리</li>
+<li><strong>보안 규정준수, 레포팅, 인텔리전스 내장</strong></li>
+</ul>
+<hr />
+<p><strong>참고</strong></p>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/defender-for-cloud/defender-for-cloud-introduction">Defender for Cloud(구 Security Center)</a> <a href="https://learn.microsoft.com/ko-kr/azure/defender-for-cloud/defender-for-cloud-introduction">https://learn.microsoft.com/ko-kr/azure/defender-for-cloud/defender-for-cloud-introduction</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/security/fundamentals/overview">Azure 본래 보안 서비스 개요</a> <a href="https://learn.microsoft.com/ko-kr/azure/security/fundamentals/overview">https://learn.microsoft.com/ko-kr/azure/security/fundamentals/overview</a></li>
+</ul>
+</li>
+</ul>
+<h2>17. Azure Monitoring 서비스 활용시 비용적인 측면의 Log Data 관리 방법에 대한 이해</h2>
+<ul>
+<li><p>Logdata 관리방식중 비용효율적인 부분 묻는 문제</p>
+<h3>🔧 로그 저장 방식에 따른 비용 구조</h3>
+<p>|                             |                                               |                                             |
+| --------------------------- | --------------------------------------------- | ------------------------------------------- |
+| <strong>Log Analytics Workspace</strong> | 기본 로그 저장소. 쿼리/알림/대시보드에 유리함 | 💸 비용 많이 발생 (GB당 저장/쿼리 비용 발생) |
+| <strong>Storage Account</strong>         | Raw 로그 저장용. 장기보관 및 아카이빙에 유리  | 💰 저렴함, 쿼리 비용 없음                    |
+| <strong>Event Hub</strong>               | 외부 시스템(SIEM 등) 연동 시 사용             | 중간 비용, 외부 솔루션 비용 고려 필요       |</p>
+<p>📘 참고: <a href="https://azure.microsoft.com/pricing/details/monitor/">Azure Monitor 가격 정책 - Log Analytics</a></p>
+<h3>💡 비용 효율적인 로그 관리 전략</h3>
+<h4>1. Diagnostic Settings 활용해 로그 라우팅 분산</h4>
+<ul>
+<li>진단 설정(Diagnostic Settings)을 통해 로그를 <strong>Log Analytics</strong>, <strong>Storage</strong>, <strong>Event Hub</strong>로 선택적 전송</li>
+<li>예시:<ul>
+<li><strong>필요한 로그만</strong> Log Analytics로 전송</li>
+<li><strong>모든 로그는</strong> Storage로 장기 보관 (아카이브)</li>
+<li><strong>보안 로그는</strong> Event Hub로 전송하여 SIEM과 연동</li>
+</ul>
+</li>
+</ul>
+<p>🔗 <a href="https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings">Diagnostic Settings 공식 문서</a></p>
+<h4>2. 데이터 수집 범위 최소화 (Data Filtering)</h4>
+<ul>
+<li>리소스의 Diagnostic Settings에서 <strong>필요한 로그 유형만 선택</strong></li>
+<li>예: <code>Administrative</code> 만 수집, <code>Heartbeat</code>, <code>Metric</code> 제외</li>
+</ul>
+<h4>3. Retention 설정 최적화</h4>
+<ul>
+<li>Log Analytics는 <strong>30일 초과 보존 시 추가 비용 발생</strong></li>
+<li>보존 주기를 단축하고, <strong>Storage Account로 백업 후 삭제</strong>하여 비용 절감</li>
+</ul>
+<h4>4. Basic Logs / Archive Logs 사용 고려</h4>
+<p>|                    |                                     |             |
+| ------------------ | ----------------------------------- | ----------- |
+| <strong>Analytics Logs</strong> | 고성능 쿼리 지원                    | 💸 높음      |
+| <strong>Basic Logs</strong>     | 간단한 로그 저장 (정밀 쿼리 불가능) | 💰 저렴      |
+| <strong>Archive Logs</strong>   | 복원 후 사용 가능, 장기 보존용      | 💸 매우 저렴 |</p>
+<p>🔗 <a href="https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-data-retention#basic-logs-and-archive-logs">Basic Logs 및 Archive Logs 공식 문서</a></p>
+</li>
+</ul>
+<h2>18. Migration From VMWare VM: 제약조건, 구성법 등</h2>
+<ul>
+<li><p>기술적 요구사항 중 데이터플랫폼의 특징만 알면 된다고 하심.</p>
+</li>
+<li><p>함정 문제 느낌</p>
+<p>VMware 기반의 온프레미스 인프라를 <strong>Azure 환경으로 이전(Migrate)</strong> 하는 방식. 주로 <strong>Azure Migrate</strong>를 통해 전체 워크로드(Compute, Network, Storage, App 등)를 이전.</p>
+<h2>🔧 구성 방식</h2>
+<ol>
+<li><strong>Azure Migrate 프로젝트 생성</strong><ul>
+<li>리전 선택, Assessment &amp; Migration 툴 연계 가능</li>
+</ul>
+</li>
+<li><strong>Appliance 설치 (VMware 환경 내)</strong><ul>
+<li>OVA 파일 다운로드 후 vCenter에 배포</li>
+<li>Inventory 수집, 디스크/네트워크 정보 확보</li>
+</ul>
+</li>
+<li><strong>Assessment 수행</strong><ul>
+<li>성능 기반 크기 조정, 비용 추정, 호환성 확인</li>
+</ul>
+</li>
+<li><strong>Migration 수행</strong><ul>
+<li>agentless vs agent 기반 마이그레이션 선택</li>
+<li>복제 설정 → 복제 완료 → 마이그레이션 트리거</li>
+</ul>
+</li>
+</ol>
+<h2>📌 기술적 요구사항</h2>
+<p>|                |                                                   |
+| -------------- | ------------------------------------------------- |
+| vCenter Server | 6.7 이상 권장, 연결 필수                          |
+| VMware Tools   | 최신 버전 설치 권장                               |
+| 포트           | TCP 443, 9443, 44368 (Agentless), 22/3389 (Agent) |
+| 계정           | vCenter 연결을 위한 관리자 권한 계정              |
+| OS 지원        | Windows Server 2008 이상, Linux Kernel ≥ 2.6      |
+| 리소스         | Azure Network/Subnet/VNet 사전 구성 필수          |</p>
+<h2>⚠️ 예상되는 함정/주의 포인트</h2>
+<ul>
+<li><strong>Agentless</strong> 방식: OS 지원에 제한 있음 (Linux 일부 미지원)</li>
+<li><strong>Disk Mapping 문제</strong>: LVM, SW RAID가 있으면 평가만 되고 마이그레이션 불가</li>
+<li><strong>Shutdown 없이 복제 가능하지만, Cutover 시 다운타임 있음</strong></li>
+<li><strong>NSG, UDR 구성 사전 고려 필요</strong> (DNS, 보안 등)</li>
+</ul>
+<h2>✅ 장단점</h2>
+<p>|                                    |                                    |
+| ---------------------------------- | ---------------------------------- |
+| 무중단 복제 (복제 후 전환)         | Cutover 시 다운타임 발생           |
+| 성능 기반 사이징 및 비용 산정 제공 | 복잡한 네트워크는 수동 재설정 필요 |
+| 대규모 워크로드 처리 지원          | OS/디스크 구조 제약 존재           |</p>
+<h2>🧠 자주 나오는 개념 &amp; 포인트</h2>
+<ul>
+<li><strong>Replication Appliance</strong>는 VMware에 설치됨</li>
+<li><strong>Azure Migrate</strong>는 복수의 도구 통합 플랫폼 (Discovery, Assessment, Migration)</li>
+<li>평가 기반 권장 VM 사이즈 제공 → 비용 절감 전략 포함</li>
+<li>앱 단위 전환은 <strong>App Containerization, refactor 필요</strong></li>
+</ul>
+<h2>📄 공식 문서 링크</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/azure/migrate/migrate-overview">Azure Migrate Overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-vmware">VMware to Azure Migration</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-vmware">지원 OS 목록</a></li>
+</ul>
+<h2>⏱️ 초압축 요약</h2>
+<ul>
+<li>Azure Migrate → vCenter 연동 + Assessment + Replication + Cutover</li>
+<li><strong>Agentless 복제</strong>는 제한적 → OS, 디스크 구조 확인 필요</li>
+<li>사전 준비 항목: vCenter, 포트, 계정, Azure Network</li>
+<li><strong>복제는 무중단</strong>, Cutover는 다운타임 있음</li>
+</ul>
+</li>
+</ul>
+<h2>19. PV/PVC with Azure File 구성시 필요한 Network 설정</h2>
+<ul>
+<li><p>private endpoint 알면 풀정도 문제</p>
+<h2>📘 개념 정의</h2>
+<ul>
+<li><strong>Azure Files</strong>: Azure에서 제공하는 SMB 기반의 파일 공유 서비스</li>
+<li><strong>PVC (PersistentVolumeClaim)</strong>: 쿠버네티스에서 상태 저장 볼륨을 요청하기 위한 객체</li>
+<li><strong>CSI Driver</strong>: Azure Files를 쿠버네티스에서 연동하기 위한 드라이버 (<code>azurefile-csi-driver</code>)</li>
+<li><strong>Private Endpoint</strong>: Azure Storage에 대한 전용 네트워크 접속(Private IP 기반)</li>
+</ul>
+<h2>🔧 구성 방식</h2>
+<ol>
+<li><p><strong>Storage Account 생성</strong></p>
+<ul>
+<li>Premium/Standard 선택</li>
+<li>SMB 3.0을 지원하도록 설정</li>
+</ul>
+</li>
+<li><p><strong>Private Endpoint 연결</strong></p>
+<ul>
+<li>Storage 계정에 Private Endpoint 추가 (파일 서비스용)</li>
+<li>연결된 VNet의 Subnet에 IP 할당됨</li>
+<li><code>privatelink.file.core.windows.net</code> DNS 사용</li>
+</ul>
+</li>
+<li><p><strong>Private DNS Zone 구성</strong></p>
+<ul>
+<li><code>privatelink.file.core.windows.net</code> Private DNS Zone 생성</li>
+<li>Virtual Network에 링크 필요</li>
+<li>자동 등록된 A 레코드 존재 여부 확인</li>
+</ul>
+</li>
+<li><p><strong>PVC 생성 방식</strong></p>
+<ul>
+<li><p>Storage Class에서 <code>csi.azure.com</code>을 정의</p>
+</li>
+<li><p>Storage Account key 또는 managed identity 기반 인증</p>
+</li>
+<li><p>예시:</p>
+<pre><code>kind: StorageClassparameters:  skuName: Standard_LRS  secretName: azure-secret
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h2>🚧 제약조건 및 확인사항</h2>
+<p>|               |                                                           |
+| ------------- | --------------------------------------------------------- |
+| DNS 설정 필수 | Private DNS Zone 연결 누락 시 내부 연결 실패              |
+| 인증 이슈     | Identity 사용 시 CSI 버전 요구, Key 방식은 비밀 관리 필요 |
+| Subnet NSG    | NSG에 Storage 접근 포트 허용 필요 (TCP 445 등)            |
+| Zone 제한     | 일부 구역에서 Azure Files Private Endpoint 미지원         |</p>
+<h2>✅ 장단점</h2>
+<p>|                         |                                                 |
+| ----------------------- | ----------------------------------------------- |
+| 공용 인터넷 완전 차단   | 설정 복잡, DNS 연동 필수                        |
+| 보안 강화 (내부망 전용) | CSI 버전 의존, 마운트 실패 시 트러블슈팅 어려움 |</p>
+<h2>🔐 보안 고려 사항</h2>
+<ul>
+<li>Azure Policy로 외부접속 허용 금지 정책 설정</li>
+<li>Role-Based Access Control로 특정 네임스페이스에만 접근 허용</li>
+<li>CSI Driver 로그 수집 및 모니터링 설정</li>
+</ul>
+<h2>📄 공식 문서 링크</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/azure/aks/azure-files-csi">Azure Files + Kubernetes CSI Driver</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/private-link/create-private-endpoint-storage-portal">Azure Files Private Endpoint 구성</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/dns/private-dns-overview">Private DNS 설정</a></li>
+</ul>
+<h2>⏱️ 시험용 초압축 요약</h2>
+<ul>
+<li>Azure Files를 PVC로 쓰려면 CSI driver 필요</li>
+<li>외부 노출 방지를 위해 <strong>Private Endpoint + Private DNS Zone</strong> 필수</li>
+<li><strong>NSG</strong>, DNS, 인증방식 사전 확인 필요</li>
+<li><code>privatelink.file.core.windows.net</code> 확인이 핵심</li>
+</ul>
+</li>
+</ul>
+<h2>20. Data Platform 구축시 요구사항정의와 그에 따른 Cloud특징</h2>
+<ul>
+<li><p>문제만 정확히 읽으면 되는 문제</p>
+<h2>1. 개념 정의 / 설명</h2>
+<ul>
+<li><strong>데이터 플랫폼</strong>: 데이터 수집, 저장, 처리, 분석, 시각화를 통합 제공하는 아키텍처</li>
+<li><strong>클라우드 특성</strong>: 서버리스, 매니지드 서비스, 무한 확장성, 비용 모델 유연성</li>
+</ul>
+<h2>2. 개념 요약</h2>
+<ul>
+<li>수집: Event Hub / IoT Hub</li>
+<li>저장: ADLS Gen2, Blob Storage, Cosmos DB, SQL DB</li>
+<li>처리: Data Factory, Synapse, Databricks</li>
+<li>분석: Synapse SQL, Power BI, HDInsight</li>
+</ul>
+<h2>3. 구성 방식</h2>
+<ol>
+<li><strong>데이터 계층 분리</strong>: Landing → Staging → Curated</li>
+<li><strong>ETL/ELT 파이프라인</strong>: Data Factory 또는 Synapse Pipeline 구성</li>
+<li><strong>스트리밍</strong>: Event Hub → Stream Analytics → Storage</li>
+<li><strong>분석</strong>: Azure Synapse Analytics / Databricks 클러스터</li>
+<li><strong>시각화</strong>: Power BI Embedded / Workbooks</li>
+</ol>
+<h2>4. 제약 조건 / 확인 사항</h2>
+<ul>
+<li>데이터 레이크 스토리지 권한 (RBAC, ACL) 설정</li>
+<li>네트워크 보안: VNet 서비스 엔드포인트 또는 Private Endpoint</li>
+<li>데이터 보존 정책 준수 (GDPR 등)</li>
+<li>성능 요구사항에 따른 SKU 선택 (Storage IOPS, DWU 등)</li>
+</ul>
+<h2>5. 장단점</h2>
+<p>|                            |                                 |
+| -------------------------- | ------------------------------- |
+| 무한 확장성, 관리형 서비스 | 복잡한 도구 간 연동 학습 필요   |
+| Pay-as-you-go, 비용 효율적 | 사용량 증가 시 비용 제어 어려움 |
+| 빠른 프로비저닝            | 데이터 전송 레이턴시 존재       |</p>
+<h2>6. 보안 고려사항</h2>
+<ul>
+<li><strong>Encryption</strong>: 저장소, 전송 시 암호화(Azure Storage SSE, TLS)</li>
+<li><strong>네트워크</strong>: Private Link, 서비스 엔드포인트 설정</li>
+<li><strong>접근 제어</strong>: Azure AD 권한, Managed Identity 활용</li>
+<li><strong>모니터링</strong>: Log Analytics, Azure Policy 컴플라이언스</li>
+</ul>
+<h2>7. 공식 문서</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/architecture/data-guide/">Azure 데이터 플랫폼 아키텍처 가이드</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/data-lake-storage-introduction">Azure Data Lake Storage Gen2</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/synapse-analytics/">Azure Synapse Analytics</a></li>
+</ul>
+<h2>8. 시험 대비 핵심 포인트</h2>
+<ul>
+<li>Landing, Staging, Curated 레이어 구분</li>
+<li>ETL vs ELT 차이</li>
+<li>서버리스 vs 프로비저닝 모델</li>
+<li>SLA 및 성능 지표 (DWU, IOPS)</li>
+</ul>
+</li>
+</ul>
+<h2>21. 구독 할당 및 관리에 대한 이해</h2>
+<ul>
+<li><p>Account policy 에 따라서 A라는 사용자가 특정 action을 할수있냐없냐</p>
+</li>
+<li><p>특정 action을 수행하려면 어떤 policy를 부여해야하는지 그런 문제</p>
+<h2>1. 개념 정의 / 설명</h2>
+<ul>
+<li><strong>구독(Subscription)</strong>: Azure 리소스 사용의 청구 및 정책 단위</li>
+<li><strong>관리 그룹(Management Group)</strong>: 구독을 그룹화하여 정책 적용 단위 제공</li>
+<li><strong>RBAC(Role-Based Access Control)</strong>: 역할 기반 권한 관리 체계</li>
+</ul>
+<h2>2. 개념 요약</h2>
+<ul>
+<li>계층: Management Group &gt; Subscription &gt; Resource Group &gt; Resource</li>
+<li>역할: Owner, Contributor, Reader, Custom Role</li>
+<li>정책: Azure Policy를 통해 거버넌스, 규정 준수</li>
+</ul>
+<h2>3. 구성 방식</h2>
+<ol>
+<li><strong>관리 그룹 구조 설계</strong>: 조직 단위에 맞춘 계층 구성</li>
+<li><strong>권한 할당</strong>: 구독/리소스 그룹 수준에서 역할 부여</li>
+<li><strong>Custom Role</strong>: JSON 정의로 세부 권한 제어</li>
+<li><strong>Azure Policy</strong>: 정책 할당으로 규정 준수 강제</li>
+</ol>
+<h2>4. 제약 조건 / 확인 사항</h2>
+<ul>
+<li>역할 상속(Inheritance)과 우선순위 이해</li>
+<li>구독 수당 Azure Policy 할당 제한(기본 1000)</li>
+<li>관리 그룹 수준 Custom Role 지원 여부</li>
+<li>MFA, 조건부 액세스 정책 확인</li>
+</ul>
+<h2>5. 장단점</h2>
+<p>|                         |                               |
+| ----------------------- | ----------------------------- |
+| 세분화된 권한 분리      | 스코프 복잡 시 관리 어려움    |
+| 거버넌스 정책 일관 적용 | Custom Role 관리 오버헤드     |
+| 중앙 집중식 정책 제어   | 잘못된 정책 설정 시 전체 영향 |</p>
+<h2>6. 보안 고려사항</h2>
+<ul>
+<li><strong>최소 권한 원칙</strong> 적용</li>
+<li><strong>조건부 액세스</strong>: MFA, 지리적 접근 제한</li>
+<li><strong>모니터링</strong>: Azure Activity Log, Sentinel 연동</li>
+<li><strong>비용 관리</strong>: Budgets, Cost Management 설정</li>
+</ul>
+<h2>7. 공식 문서</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/overview">Azure RBAC 개요</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/governance/policy/overview">Azure Policy 개요</a></li>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/governance/management-groups/overview">Management Group 소개</a></li>
+</ul>
+<h2>8. 시험 대비 핵심 포인트</h2>
+<ul>
+<li>역할 스코프 유효 범위</li>
+<li>Policy vs RBAC 차이</li>
+<li>Management Group 최대 계층 깊이</li>
+<li>Custom Role JSON 구조</li>
+<li>특정 사용자가 특정 액션 가능 여부 → <strong>역할 + 스코프</strong> 조합으로 판단</li>
+<li>액션 허용 위해 필요한 Role 정의 → <strong>Custom Role 생성 또는 Contributor/Owner 권한 확인</strong></li>
+<li>조건부 액세스 정책(MFA, IP 제한) 포함될 수 있음</li>
+</ul>
+</li>
+</ul>
+<h2>22. Vnet Flow log 서비스 종류와 특징 이행</h2>
+<ul>
+<li><p>최근 새로운 서비스인 Vnet flow log 가 출시되어서 기존있던거랑 신제품의 차이 알면되는 문제</p>
+<p><strong>VNet Flow Logs</strong>는 Azure Virtual Network(VNet) 수준에서 발생하는 트래픽 흐름을 기록하고 분석하기 위한 기능입니다. 기존 <strong>NSG(Network Security Group) Flow Logs</strong>의 한계를 보완하며, <strong>네트워크 가시성 확보 및 보안 분석</strong>에 활용됩니다.</p>
+<h2>🆕 기존 NSG Flow Logs vs. VNet Flow Logs (2023~2025 주요 변화)</h2>
+<p>|                   |                                     |                                             |
+| ----------------- | ----------------------------------- | ------------------------------------------- |
+| <strong>수집 단위</strong>     | NSG (Network Security Group) 단위   | Virtual Network 전체                        |
+| <strong>데이터 가시성</strong> | 제한적 (NSG 기준 Inbound/Outbound)  | 전체 흐름 기반 (암호화 여부 포함)           |
+| <strong>구성</strong>          | NSG별로 Flow Log 설정 필요          | VNet 단위로 간편 설정                       |
+| <strong>저장 옵션</strong>     | Storage, Log Analytics              | Storage, Log Analytics, Event Hub 모두 지원 |
+| <strong>포맷</strong>          | JSON (v1), CSV (v2)                 | JSON 기반                                   |
+| <strong>추가 정보</strong>     | NSG 규칙만 기록                     | VNet Manager 정책, 암호화 상태 포함         |
+| <strong>향후 계획</strong>     | 2025년 6월 이후 신규 생성 중단 예정 | 신규 대체 기술로 권장됨                     |</p>
+<p>📚 공식 문서: <a href="https://learn.microsoft.com/en-us/azure/network-watcher/vnet-flow-logs-overview">VNet Flow Logs 소개</a></p>
+<h2>⚙️ 구성 방식</h2>
+<ul>
+<li><strong>VNet 단위</strong>로 설정하며, 모든 서브넷/NSG의 흐름을 포괄</li>
+<li>설정 시 목적지: Storage Account / Log Analytics / Event Hub 지정 가능</li>
+<li>NSG Flow Log는 리소스 개별 설정이 필요했던 것과 달리 전체 가시성 확보 용이</li>
+</ul>
+<pre><code>az network watcher flow-log configure   --location eastus   --resource-group &lt;rg&gt;   --nsg &lt;vnet-name&gt;   --enabled true   --log-version 2   --storage-account &lt;sa-name&gt;
+</code></pre>
+<h2>✅ 장점</h2>
+<ul>
+<li>VNet 전체 흐름 기반 분석 가능 → <strong>보안 탐지 및 최적화에 유리</strong></li>
+<li>암호화 상태, 정책 기반 흐름까지 기록 가능</li>
+<li>구성 간소화 → 설정 누락 및 누수 방지</li>
+</ul>
+<h2>❌ 단점</h2>
+<ul>
+<li>상대적으로 <strong>비용 증가 가능성</strong></li>
+<li>많은 양의 데이터 → <strong>Log Analytics 요금 폭증 주의</strong></li>
+<li>Preview 단계에서 일부 기능 제약 존재 가능</li>
+</ul>
+<h2>🔐 보안 및 운영 활용</h2>
+<ul>
+<li>Zero Trust 기반 트래픽 분석 가능 (내부 흐름 확인)</li>
+<li>이상 징후 탐지, 접근 탐색 분석</li>
+<li>NVA, 방화벽 등과 연계한 흐름 분석 가능</li>
+</ul>
+<h2>✏️ 시험 포인트 요약 (초압축)</h2>
+<ul>
+<li>기존 NSG Flow Logs는 2025년 이후 <strong>신규 생성 불가 예정</strong></li>
+<li>신규 VNet Flow Logs는 <strong>전체 흐름 기록</strong>, <strong>암호화/정책 포함</strong>, <strong>EventHub 연동 가능</strong></li>
+<li>보안 가시성 및 트래픽 최적화에 유리하나 <strong>비용 고려 필요</strong></li>
+</ul>
+<h2>📚 참고 문서</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/azure/network-watcher/vnet-flow-logs-overview">VNet Flow Logs 개요</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/network-watcher/network-watcher-nsg-flow-logging-overview">NSG Flow Logs 구성</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/azure-monitor/network/network-insights-overview">Azure Monitor와 연계</a></li>
+</ul>
+</li>
+</ul>
+<h2>23. AKS with GPU 구성시, 자원을 효율적으로 사용하기 위한 방안을 서술하세요 문제</h2>
+<ul>
+<li><p>2문제 나올것같음</p>
+<ol>
+<li><p>컨테이너상에서 request/limit 등 qos관련된 내용 알아야하는 문제 burst, best effort, guarantee 3가지가 있다.</p>
+</li>
+<li><p>gpu는 shared가 불가한거 가능한거 아키텍쳐가 다름(예전 t100 등)</p>
+</li>
+</ol>
+<ul>
+<li>컨테이너가 아무리 나눠서 요청해도 같이 쓸수가 없다.</li>
+<li>최신 아키텍쳐는 된다는것 같음.</li>
+</ul>
+</li>
+<li><p>AKS에서 GPU 리소스를 사용하면 고성능 연산(예: AI, 딥러닝)을 효율적으로 수행할 수 있습니다. GPU 노드는 일반 CPU 노드와 별도로 관리되며, 스케줄링 시 GPU를 사용하는 Pod에만 할당됩니다.</p>
+<h2>🧠 QoS (Quality of Service) 관련 개념</h2>
+<h3>🔹 Kubernetes QoS 클래스</h3>
+<p>컨테이너의 리소스 <code>request</code> 및 <code>limit</code> 설정에 따라 다음 세 가지 QoS 클래스로 분류됩니다:</p>
+<p>|            |                                     |                                                             |
+| ---------- | ----------------------------------- | ----------------------------------------------------------- |
+| Guaranteed | 가장 높은 안정성 보장               | 모든 컨테이너에 request == limit 이 모두 정의되어 있어야 함 |
+| Burstable  | 일정 수준의 자원 보장 + 버스트 허용 | 일부 request/limit 정의                                     |
+| BestEffort | 최소 보장, 버스트 가능              | request/limit 모두 없음                                     |</p>
+<blockquote>
+<p>GPU 자원은 반드시 <code>nvidia.com/gpu</code> label로 request 및 limit를 명시해야 사용 가능 <code>Guaranteed</code> 클래스로 분류되어야 안정적인 GPU 스케줄링 가능</p>
+</blockquote>
+<h2>⚙️ 구성 방식</h2>
+<ul>
+<li>GPU 노드는 <strong>전용 Node Pool</strong>로 분리하여 운영 (예: NCasT4_v3, ND_v2)</li>
+<li><code>taints</code> + <code>tolerations</code> 로 GPU 전용 Pod만 해당 노드에 스케줄링</li>
+<li>Pod spec 예시:</li>
+</ul>
+<pre><code>resources:  limits:    nvidia.com/gpu: 1  requests:    nvidia.com/gpu: 1
+</code></pre>
+<h2>⚠️ 제약조건 및 아키텍처 이슈</h2>
+<h3>🔸 GPU 공유 불가 아키텍처</h3>
+<ul>
+<li>예전 아키텍처 (예: T100, K80 등)는 GPU Sharing 불가</li>
+<li>1 Pod에 1 GPU 단위로 할당 → 낭비 발생 가능</li>
+</ul>
+<h3>🔸 최신 GPU (Multi-instance GPU: MIG)</h3>
+<ul>
+<li>A100, H100 등의 최신 NVIDIA GPU는 MIG를 통해 공유 가능</li>
+<li>Kubernetes와 연동하려면 GPU Operator 및 MIG 설정 필요</li>
+</ul>
+<blockquote>
+<p>시험 포인트: <strong>GPU는 기본적으로 공유 불가능</strong>, 최신 GPU 아키텍처에서만 <strong>MIG 기능</strong>으로 공유 가능</p>
+</blockquote>
+<h2>✅ 장단점</h2>
+<p>|                             |                              |
+| --------------------------- | ---------------------------- |
+| 고성능 병렬 처리            | 비용 높음                    |
+| 전용 노드 운영으로 안정성 ↑ | GPU 미사용 시 자원 낭비 우려 |
+| 최신 GPU는 MIG로 효율 ↑     | 복잡한 설정 필요 (MIG)       |</p>
+<h2>🔐 보안/운영 고려사항</h2>
+<ul>
+<li>GPU 드라이버 및 CUDA 환경 자동 구성은 <strong>NVIDIA Device Plugin</strong> 필요</li>
+<li>GPU 노드 오토스케일링은 <code>taint</code> 전략과 <code>cluster autoscaler</code> 조건을 고려해야 함</li>
+</ul>
+<h2>📚 공식 문서</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/ko-kr/azure/aks/gpu-cluster">AKS GPU 노드 구성</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA Kubernetes Device Plugin</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html">MIG &amp; Multi-Instance GPU</a></li>
+</ul>
+<h2>✏️ 시험 포인트 요약 (초압축)</h2>
+<ul>
+<li><code>request/limit</code> 설정 → QoS에 영향, GPU는 <code>Guaranteed</code> 클래스 권장</li>
+<li>GPU는 기본적으로 공유 불가 → <strong>MIG 있는 GPU만 가능</strong></li>
+<li>GPU 노드는 taint/toleration 사용, autoscaler 연동 필요</li>
+</ul>
+</li>
+</ul>
+<h1>개념잡기용 Documentation List</h1>
+<h2>Azure Resource RBAC Policy: 관리그룹 및 구도에 계층형 구조에 따른 사용자권한 제어</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/role-based-access-control/scope-overview">https://learn.microsoft.com/ko-kr/azure/role-based-access-control/scope-overview</a></p>
+<h2>Azure Storage Account(Object Storage) Tier 별 특성</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/access-tiers-overview">https://learn.microsoft.com/ko-kr/azure/storage/blobs/access-tiers-overview</a></p>
+<h2>Azure Storage Account Life Cycle Event 활용법: Event 처리를 위한 구성방법, 데이터 유지관리 등 자동화 기능에 대한 이해</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-overview">https://learn.microsoft.com/ko-kr/azure/storage/blobs/lifecycle-management-overview</a> <a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-blob-event-overview">https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-blob-event-overview</a></p>
+<h2>VNet 구성시 Inbound(LB), Outbound(NAT)구성방법과 기술구조/네트웍 흐름 이해</h2>
+<p><a href="https://learn.microsoft.com/en-us/azure/nat-gateway/nat-gateway-design">https://learn.microsoft.com/en-us/azure/nat-gateway/nat-gateway-design</a></p>
+<h2>Saving Plan, Reserved Instance을 활용한 비용절감 방안 이해</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/cost-management-billing/savings-plan/savings-plan-compute-overview">https://learn.microsoft.com/ko-kr/azure/cost-management-billing/savings-plan/savings-plan-compute-overview</a></p>
+<h2>Azure Storage Account 특징과 차이</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/storage/common/storage-introduction?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&amp;bc=%2Fazure%2Fstorage%2Fblobs%2Fbreadcrumb%2Ftoc.json">https://learn.microsoft.com/ko-kr/azure/storage/common/storage-introduction?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&amp;bc=%2Fazure%2Fstorage%2Fblobs%2Fbreadcrumb%2Ftoc.json</a> <a href="https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-feature-support-in-storage-accounts">https://learn.microsoft.com/ko-kr/azure/storage/blobs/storage-feature-support-in-storage-accounts</a></p>
+<h2>VMSS 특성에 대한 이해</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-orchestration-modes">https://learn.microsoft.com/ko-kr/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-orchestration-modes</a></p>
+<h2>DNS Resolver 구성법: AWS/Azure/Onpremise DNS동기화를 위한 구성과 필요한 Network 구성</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/dns/dns-private-resolver-overview">https://learn.microsoft.com/ko-kr/azure/dns/dns-private-resolver-overview</a> <a href="https://learn.microsoft.com/ko-kr/azure/dns/dns-private-resolver-get-started-portal">https://learn.microsoft.com/ko-kr/azure/dns/dns-private-resolver-get-started-portal</a></p>
+<h2>AKS Monitoring를 활용한 자원/Workload 모니터링 이해</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/azure-monitor/autoscale/autoscale-overview">https://learn.microsoft.com/ko-kr/azure/azure-monitor/autoscale/autoscale-overview</a> <a href="https://learn.microsoft.com/ko-kr/azure/azure-monitor/platform/monitor-azure-resource">https://learn.microsoft.com/ko-kr/azure/azure-monitor/platform/monitor-azure-resource</a></p>
+<h2>Azure 기반 Messaging 구성법 및 필요로 하는 Azure 서비스</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/messaging-services/">https://learn.microsoft.com/ko-kr/azure/messaging-services/</a></p>
+<h2>AKS Autoscale 이해: POD, Node(Node Group)</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/aks/cluster-autoscaler?tabs=azure-cli">https://learn.microsoft.com/ko-kr/azure/aks/cluster-autoscaler?tabs=azure-cli</a> <a href="https://kubernetes.io/ko/docs/tasks/run-application/horizontal-pod-autoscale/">https://kubernetes.io/ko/docs/tasks/run-application/horizontal-pod-autoscale/</a></p>
+<h2>AKS 설치 구성에 대한 이해: Ingress Controller, CNI, CSI (최근 업데이트 된 내용 확인 필요)</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/aks/learn/quick-kubernetes-deploy-terraform?pivots=development-environment-azure-cli">https://learn.microsoft.com/ko-kr/azure/aks/learn/quick-kubernetes-deploy-terraform?pivots=development-environment-azure-cli</a> <a href="https://learn.microsoft.com/ko-kr/azure/aks/concepts-network-cni-overview">https://learn.microsoft.com/ko-kr/azure/aks/concepts-network-cni-overview</a> <a href="https://learn.microsoft.com/ko-kr/azure/aks/concepts-network-ingress">https://learn.microsoft.com/ko-kr/azure/aks/concepts-network-ingress</a> <a href="https://learn.microsoft.com/ko-kr/azure/aks/concepts-storage">https://learn.microsoft.com/ko-kr/azure/aks/concepts-storage</a></p>
+<h2>Github Action의 의 기술구조 이해(Trigger Event 등)</h2>
+<p><a href="https://docs.github.com/ko/actions/reference/workflow-syntax-for-github-actions">https://docs.github.com/ko/actions/reference/workflow-syntax-for-github-actions</a></p>
+<h2>CICD 기본 개념</h2>
+<p><a href="https://docs.github.com/ko/actions/how-tos/security-for-github-actions/security-guides/using-secrets-in-github-actions">https://docs.github.com/ko/actions/how-tos/security-for-github-actions/security-guides/using-secrets-in-github-actions</a></p>
+<h2>Azure Loadbalancer 이해: 가용성, 분산처리 특징과 Coverage</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/load-balancer/skus">https://learn.microsoft.com/ko-kr/azure/load-balancer/skus</a></p>
+<h2>AKS권한 관리 방식: K8S의 IAM처리 방식의 이해 Entra ID, Service Account 등 이해와 차이점</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/aks/enable-authentication-microsoft-entra-id">https://learn.microsoft.com/ko-kr/azure/aks/enable-authentication-microsoft-entra-id</a></p>
+<h2>Support VM OS SKU 및 Migration 방법(제약사항)</h2>
+<p><a href="https://learn.microsoft.com/en-us/azure/migrate/server-migrate-overview?view=migrate-classic">https://learn.microsoft.com/en-us/azure/migrate/server-migrate-overview?view=migrate-classic</a></p>
+<h2>Azure Function Tier 특징이해와 선택(대용량 Batch를 위한 Function Tier)</h2>
+<p><a href="https://learn.microsoft.com/ko-kr/azure/azure-functions/durable/">https://learn.microsoft.com/ko-kr/azure/azure-functions/durable/</a></p>
