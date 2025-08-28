@@ -1,3 +1,6 @@
+[[https://zenio7](https://zenio7.github.io/2025kice/)](https://zenio7.github.io/2025kice/)
+https://2025kice.blogspot.com/
+
 Azure AKS 서술형 시험문제 및 모범답안 
 문제 1: Pod CrashLoopBackOff 원인과 해결방안
 
