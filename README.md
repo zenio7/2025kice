@@ -1,4 +1,4 @@
-[[https://zenio7](https://zenio7.github.io/2025kice/)](https://zenio7.github.io/2025kice/)
+https://zenio7.github.io/2025kice/
 https://2025kice.blogspot.com/
 
 Azure AKS 서술형 시험문제 및 모범답안 
